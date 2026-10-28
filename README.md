@@ -8,13 +8,13 @@
 
 | 部分 | 本仓库入口 | 开发仓库与分支 | 本次引用版本 |
 |---|---|---|---|
-| FPGA导航＋原4500运动控制 | [components/nav-control](components/nav-control) | [SOC_FPGA_NAV · codex/integration-g2-20261022](https://github.com/LRaina215/SOC_FPGA_NAV/tree/codex/integration-g2-20261022) | [`45341d4`](https://github.com/LRaina215/SOC_FPGA_NAV/commit/45341d41d76717ff6570077e066dad96d8875485) |
+| FPGA导航＋原4500运动控制 | [components/nav-control](components/nav-control) | [SOC_FPGA_NAV · main](https://github.com/LRaina215/SOC_FPGA_NAV/tree/main) | [`45341d4`](https://github.com/LRaina215/SOC_FPGA_NAV/commit/45341d41d76717ff6570077e066dad96d8875485) |
 | RK3588服务、Web与云网关 | [components/rk-web](components/rk-web) | [QHXD_Web · yuntuo-fpga](https://github.com/LRaina215/QHXD_Web/tree/yuntuo-fpga) | [`bfb7a34`](https://github.com/LRaina215/QHXD_Web/commit/bfb7a3480809a3d5a5b5d46ade3365392c8ea160) |
 | 微信小程序 | [components/miniprogram](components/miniprogram) | [QHXD_Miniprogram · yuntuo](https://github.com/LRaina215/QHXD_Miniprogram/tree/yuntuo) | [`b4be81c`](https://github.com/LRaina215/QHXD_Miniprogram/commit/b4be81c89f78b16d962d1d9467adba60b2ace229) |
 
 **NAV仓库已经包含导航和Control。** 其中`control/`保存原4500的受跟踪副本，`integration/`维护联合工程与候选适配。总仓库不再增加一个并行的Control组件；[Chenyudog/fpga](https://github.com/Chenyudog/fpga)保留为控制来源参考。
 
-总仓库的`main`只组织入口、说明和组件版本。它不会合并或修改组件仓库的`main/master`，也不会让组件自动跟随远端最新提交。
+总仓库的`main`只组织入口、说明和组件版本，组件不会自动跟随远端最新提交。2026-10-28按用户要求，NAV开发分支已快进合入其`main`，当前引用仍是同一个`45341d4`；RK/Web与小程序的维护分支保持不变。
 
 ## 系统组成
 
@@ -39,9 +39,9 @@ flowchart TB
 
 完整设计与接口以组件文档为准，总仓库不复制一套独立维护的总体设计或整车计划：
 
-- [总体架构设计](https://github.com/LRaina215/SOC_FPGA_NAV/blob/codex/integration-g2-20261022/docs/system_architecture.md)
-- [整车总计划与当前状态](https://github.com/LRaina215/SOC_FPGA_NAV/blob/codex/integration-g2-20261022/docs/1_plan/system_integration_plan_20261021.md)
-- [FPGA接口ICD](https://github.com/LRaina215/SOC_FPGA_NAV/blob/codex/integration-g2-20261022/docs/2_interface/icd.md)
+- [总体架构设计](https://github.com/LRaina215/SOC_FPGA_NAV/blob/main/docs/system_architecture.md)
+- [整车总计划与当前状态](https://github.com/LRaina215/SOC_FPGA_NAV/blob/main/docs/1_plan/system_integration_plan_20261021.md)
+- [FPGA接口ICD](https://github.com/LRaina215/SOC_FPGA_NAV/blob/main/docs/2_interface/icd.md)
 - [RK部署与服务说明](https://github.com/LRaina215/QHXD_Web/blob/yuntuo-fpga/docs/YUNTUO.md)
 - [小程序维护记录](https://github.com/LRaina215/QHXD_Miniprogram/blob/yuntuo/MAINTENANCE.md)
 

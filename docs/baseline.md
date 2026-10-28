@@ -1,6 +1,8 @@
 # 2026-10-28集成快照
 
-这是创建总仓库时固定的版本组合，不是整车验收版本或新任务规划。后续状态仍以[NAV整车总计划](https://github.com/LRaina215/SOC_FPGA_NAV/blob/codex/integration-g2-20261022/docs/1_plan/system_integration_plan_20261021.md)为唯一入口。
+这是创建总仓库时固定的版本组合，不是整车验收版本或新任务规划。后续状态仍以[NAV整车总计划](https://github.com/LRaina215/SOC_FPGA_NAV/blob/main/docs/1_plan/system_integration_plan_20261021.md)为唯一入口。
+
+2026-10-28后续：按用户要求，NAV开发分支的227个提交已快进合入main并推送，main现在也是`45341d4`。总仓库引用的代码内容和以下验证边界没有变化，仅NAV维护分支与动态文档入口改为main。
 
 ## 固定版本
 

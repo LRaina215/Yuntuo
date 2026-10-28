@@ -1,44 +1,33 @@
-# 仓库组织与版本更新
+# 仓库组织
 
-## 为什么采用组件引用
+云拓按 FPGA、RK3588 与 Web、微信小程序三个部分组织代码。各仓库保留自己的开发环境、构建流程和提交历史；Yuntuo 总仓库提供统一的项目介绍与访问入口。
 
-三个工程已经各有代码历史、配置与维护入口。总仓库用Git子模块记录它们的提交，在GitHub上显示为可点击的目录；它不会复制组件历史，也不会把NAV、Web和小程序混成同一个构建工程。
+## 组件与维护分支
 
-| 路径 | 包含内容 | 维护分支 |
+| 组件 | 代码入口 | 内容 |
 |---|---|---|
-| `components/nav-control` | 导航RTL/固件、原4500控制副本、同片联合工程、仿真及系统文档 | `main` |
-| `components/rk-web` | RK模型服务、视觉/语音、任务桥接、Web和云网关 | `yuntuo-fpga` |
-| `components/miniprogram` | 微信小程序源码及专项验证 | `yuntuo` |
+| nav-control | [SOC_FPGA_NAV · main](https://github.com/LRaina215/SOC_FPGA_NAV/tree/main) | 雷达感知、地图、定位、规划、探索、跟踪、轮腿控制及同片联合工程 |
+| rk-web | [QHXD_Web · yuntuo-fpga](https://github.com/LRaina215/QHXD_Web/tree/yuntuo-fpga) | RK3588 模型服务、任务桥接、Web 控制台、云网关与视频服务 |
+| miniprogram | [QHXD_Miniprogram · yuntuo](https://github.com/LRaina215/QHXD_Miniprogram/tree/yuntuo) | 微信端任务操作、语音助手、地图、视频和状态展示 |
 
-控制上游仓库是来源参考；目前运行适配与联合记录在NAV中，不单独固定第二份Control指针。某些仓库默认分支不是上述项目开发分支，因此不要只点默认首页就判断当前代码版本。
+FPGA 仓库中的 `control/` 维护原 4500 控制代码，`integration/` 维护导航与控制的联合工程。控制代码的来源和适配关系见 [control/FORK.md](https://github.com/LRaina215/SOC_FPGA_NAV/blob/main/control/FORK.md)。
 
-## 总仓库记录什么
+## 浏览与获取
 
-- `.gitmodules`记录组件地址与维护分支。
-- Git树中的子模块指针记录具体提交，普通子模块初始化按这个提交检出，不会自动跟随维护分支。
-- README记录可读的入口与版本表，`docs/baseline.md`说明这一组版本的验证范围。
-- 总体设计和整车总计划只引用NAV中的既有文档，不另建同名副本。
+README 和[组件索引](../components/README.md)直接链接各仓库的维护分支，打开即可浏览该分支的最新代码。下载命令见 [README](../README.md#获取代码)。
 
-目录刚克隆时可能为空；执行README中的初始化命令后才会下载代码。该仓库可以作为版本组合入口，但不是一条命令就完成模型部署、FPGA构建或实车验收的安装器。
+本地可将三个仓库克隆到 `components/nav-control`、`components/rk-web` 和 `components/miniprogram`，也可继续使用各自的开发目录。总仓库忽略这三个本地克隆目录，组件改动在对应仓库中提交。
 
-## 更新组件版本
+## 文档分工
 
-正常开发继续在各组件原仓库进行：先完成必要验证并提交、推送，然后决定总仓库是否引用该提交。总仓库中已初始化的子模块可以这样更新（用已核对的真实提交替换占位符）：
+- **Yuntuo README**：介绍项目、系统架构、各部分功能与代码入口。
+- **NAV 文档**：维护总体设计、FPGA 接口、导航控制设计、硬件操作和整车开发计划。
+- **RK/Web 文档**：维护模型部署、任务服务、Web 与云网关配置。
+- **小程序文档**：维护页面、开发环境、视频接入和移动端使用说明。
+- **版本与联调记录**：在 [docs/baseline.md](baseline.md) 中记录历史版本，链接对应专项报告。
 
-```bash
-git -C components/nav-control fetch origin
-git -C components/nav-control checkout --detach <已推送的提交>
-git add components/nav-control
-```
+## 日常维护
 
-随后同步README版本表及`docs/baseline.md`，检查`git diff --cached --submodule=short`，提交并推送总仓库。Web、小程序同理。更新前检查组件工作区，已有本地改动应留在所属开发工作区，不能覆盖。
+代码和部署说明随各组件更新；总仓库同步功能介绍、目录变化和文档链接。组件分支有新提交后，分支链接会直接展示新内容，无需在总仓库更新版本指针。
 
-不要把`git submodule update --remote`当作普通同步：它会选维护分支的新版本，改变当前组合。想重现总仓库已记录的组合时，使用`git submodule update --init --recursive`。
-
-## 现有本机工作目录
-
-总仓库位于`D:/Desktop/SOC FPGA/Yuntuo`。原开发目录`nav`、`QHXD_Web`和`QHXD_Miniprogram`继续保留原位置。2026-10-28按用户要求，NAV开发分支已快进合入main，本地nav也已切到main；已有未提交改动原样保留。Web和小程序分支未变。
-
-本机总仓库创建时只登记子模块指针，没有重复下载现有工程。GitHub可以直接跳转，其他电脑可按README递归克隆。总仓库`main`与NAV的`main`属于两个不同仓库。创建后用户明确要求合并NAV：main从`7cd63d9`快进至`45341d4`，包含开发分支227个提交，已推送；原`codex/integration-g2-20261022`分支保留。`.gitmodules`现在将NAV维护分支设为main，固定指针仍为`45341d4`，不改变原版本组合。
-
-总仓库采用私有可见性，与私有NAV的访问范围一致。Web和小程序的原可见性保持；将来如果改变总仓库可见性，也不会自动改变子模块访问权限。
+私有仓库的访问由 GitHub 账号权限管理。各仓库独立设置访问权限。

@@ -11,3 +11,6 @@ Thumbs.db
 __pycache__/
 build/
 reports/local/
+/components/nav-control/
+/components/rk-web/
+/components/miniprogram/

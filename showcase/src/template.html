@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#08121a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='8' fill='%2308121a'/%3E%3Cpath d='M10 11h8l6 12 6-12h8L28 30v9h-8v-9Z' fill='%237fe7e1'/%3E%3C/svg%3E">
+<meta name="description" content="云拓 YunTuo Robot：FPGA 自主导航与轮腿控制，RK3588 边缘多模态任务引擎。交互探索真实车体结构、系统架构与任务流程。">
+<title>YunTuo Robot · 云拓轮腿机器人</title>
+<style>/*__STYLES__*/</style>
+</head>
+<body>
+<a class="skip" href="#main">跳转到项目介绍</a>
+<header class="header">
+  <a class="brand" href="#top" aria-label="YunTuo Robot 首页"><span class="brand-symbol">Y<span>↗</span></span><span>YunTuo <b>Robot</b><small>云拓 · 轮腿机器人</small></span></a>
+  <nav aria-label="页面导航"><a href="#structure">结构</a><a href="#architecture">架构</a><a href="#navigation">导航</a><a href="#intelligence">边缘智能</a><a href="#experience">交互</a></nav>
+  <a class="repo-link" href="https://github.com/LRaina215/Yuntuo" target="_blank" rel="noopener">项目仓库 <span>↗</span></a>
+</header>
+<main id="main">
+<section class="hero section" id="top">
+  <div class="hero-copy">
+    <div class="eyebrow"><span class="tiny-dot"></span> FPGA × RK3588 <span class="eyebrow-line"></span> WHEEL–LEGGED ROBOT</div>
+    <h1>让智能<br>落到<span class="outlined">每一步</span><span class="title-dot">.</span></h1>
+    <p class="hero-description">云拓，将环境感知、自主导航与轮腿控制融入一台机器人。用本地视觉、语音和语言模型理解任务，让人与机器的协作从一句话开始。</p>
+    <div class="hero-actions"><a class="button primary" href="#structure">探索车体 <span>↘</span></a><a class="text-link" href="https://lingxunrobot.cn" target="_blank" rel="noopener">打开 Web 控制台 <span>↗</span></a></div>
+    <div class="hero-specs"><div><strong>同片协同</strong><span>FPGA 导航 + 运动控制</span></div><div><strong>边缘智能</strong><span>RK3588 多模型部署</span></div><div><strong>双端交互</strong><span>Web + 微信小程序</span></div></div>
+    <div class="partners" aria-label="项目标志"><img class="fpga-logo" src="__FPGA_LOGO__" alt="FPGA 创新设计竞赛 · 国赛十周年"><span class="partner-divider"></span><span id="chy-brand">__CHY_LOGO__</span><span class="partner-name">YunTuo<br><b>Robot</b></span></div>
+  </div>
+  <div class="model-panel" id="structure">
+    <div class="stage-top"><span class="mono">01 / CHASSIS EXPLORER</span><span class="stage-source">URDF 车体模型 <span class="tiny-dot"></span></span></div>
+    <div id="model-stage" role="img" aria-label="可旋转、缩放与拆解的云拓车体三维模型" tabindex="0"><div id="model-loading"><span class="loader"></span>正在展开车体模型…</div><div class="model-watermark" aria-hidden="true">YUN<br>TUO.</div><div id="part-marker" hidden></div></div>
+    <div class="view-tools" aria-label="模型视图"><button data-view="iso" class="active" aria-pressed="true">透视</button><button data-view="front" aria-pressed="false">正面</button><button data-view="side" aria-pressed="false">侧面</button><button data-view="top" aria-pressed="false">俯视</button><span></span><button id="rotate-button" aria-pressed="false" title="自动旋转">旋转</button><button id="wire-button" aria-pressed="false">线框</button><button id="model-reset" title="恢复初始视角和装配状态">重置 ↺</button></div>
+    <div class="model-controls"><div class="explode-row"><label for="explode">结构拆解</label><input id="explode" type="range" min="0" max="100" value="0"><output id="explode-value" for="explode">0%</output></div><div class="part-selector" role="group" aria-label="选择车体部件"><button class="active" data-part="all" aria-pressed="true">整车</button><button data-part="base" aria-pressed="false">机身</button><button data-part="left" aria-pressed="false">左腿</button><button data-part="right" aria-pressed="false">右腿</button><button data-part="wheels" aria-pressed="false">双轮</button></div><div class="part-caption"><div><strong id="part-title">两轮 × 四路腿部舵机</strong><p id="part-description">拖动旋转 · 滚轮缩放 · 点击部件查看。拆解展示装配关系。</p></div><span id="part-count" class="mono">7 LINKS<br>6 JOINTS</span></div></div>
+  </div>
+</section>
+<div class="capability-strip"><span>感知环境</span><i>↗</i><span>维护地图</span><i>↗</i><span>规划路径</span><i>↗</i><span>轮腿执行</span><i>↗</i><span>理解任务</span><i>↗</i><span>反馈状态</span></div>
+
+<section class="section architecture" id="architecture">
+  <div class="section-heading"><div><div class="eyebrow">02 / SYSTEM ARCHITECTURE</div><h2>算力各尽其用，<br>任务贯穿全栈。</h2></div><p>FPGA 处理连续的感知与运动闭环，RK3588 理解任务并提供视觉目标。云端连接设备与用户，电脑和手机共享任务与状态。</p></div>
+  <div class="architecture-layout">
+    <div class="system-map" role="group" aria-label="选择系统层查看分工">
+      <button class="system-node" data-system="clients" aria-pressed="false"><span class="node-number">01</span><span class="node-main">人与机器人<small>Web 控制台 · 微信小程序</small></span><span class="node-tag">交互</span></button>
+      <div class="flow-line"><span>任务 / 地图 / 视频 / 状态</span><b>↓ ↑</b></div>
+      <button class="system-node" data-system="cloud" aria-pressed="false"><span class="node-number">02</span><span class="node-main">云端连接<small>Nginx · MediaMTX · 接口网关</small></span><span class="node-tag">接入</span></button>
+      <div class="flow-line"><span>HTTPS · WebSocket · 媒体流</span><b>↓ ↑</b></div>
+      <button class="system-node" data-system="rk" aria-pressed="false"><span class="node-number">03</span><span class="node-main">RK3588<small>边缘多模态任务引擎</small></span><span class="node-tag">理解</span></button>
+      <div class="flow-line"><span>导航任务与目标 / 控制遥测</span><b>↓ ↑</b></div>
+      <button class="system-node active" data-system="fpga" aria-pressed="true"><span class="node-number">04</span><span class="node-main">FPGA<small>雷达感知 → 定位规划 → 轮腿控制</small></span><span class="node-tag">执行</span></button>
+      <div class="sensor-line"><span>XT-M60 雷达</span><span>BMI088</span><span>轮编码器</span><span>双轮 + 四舵机</span></div>
+    </div>
+    <article class="system-detail" aria-live="polite"><div class="detail-kicker"><span id="system-kicker">DETERMINISTIC MOTION</span><span>↗</span></div><h3 id="system-title">导航与控制，<br>落在同一片 FPGA。</h3><p id="system-description"></p><div id="system-features"></div><div class="system-interface"><span>数据如何流动</span><p id="system-interface"></p></div></article>
+  </div>
+  <div class="control-band"><div><span class="eyebrow">ON-CHIP POLICY</span><h3>原 4500 策略<br>驱动轮腿协同。</h3><p>运动目标与姿态反馈进入定点推理网络。腿部动作叠加高度逆运动学，轮动作进入编码器速度闭环。</p></div><div class="network"><div><span>观测历史</span><strong>140</strong><small>5 帧 × 28 维</small></div><b>→</b><div><span>历史编码</span><strong>3</strong><small>128 / 64 隐层</small></div><b>→</b><div><span>动作网络</span><strong>6</strong><small>左右髋 / 膝 / 轮</small></div><div class="network-foot"><span><b>125 Hz</b> 策略推理</span><span><b>16 bit</b> 模型权重</span><span><b>24 bit Q12</b> 激活与输出</span></div></div></div>
+</section>
+
+<section class="navigation-section" id="navigation"><div class="section">
+  <div class="section-heading"><div><div class="eyebrow">03 / FPGA AUTONOMOUS NAVIGATION</div><h2>把地形，<br>变成可以规划的空间。</h2></div><p>点云落入滚动高程图，地形变化转为通行代价。结构匹配修正位姿，全局路径与局部轨迹共同引导机器人移动。</p></div>
+  <div class="navigation-layout"><div class="map-box"><div class="map-top"><span class="mono">LOCAL MAP / PIPELINE DEMO</span><span id="map-mode-label">高程观测</span></div><canvas id="map-canvas" aria-label="导航流程示意图，可点击设置规划目标" tabindex="0"></canvas><div class="map-legend" id="map-legend"></div><div class="map-hint">流程示意场景 · 在“路径”层点击空地，更改目标</div></div><div class="navigation-copy"><div class="map-tabs" role="group" aria-label="地图处理阶段"><button data-layer="height" class="active" aria-pressed="true"><span>01</span><b>高程</b><small>点云栅格化</small></button><button data-layer="terrain" aria-pressed="false"><span>02</span><b>地形</b><small>危险分类</small></button><button data-layer="inflation" aria-pressed="false"><span>03</span><b>膨胀</b><small>包络约束</small></button><button data-layer="path" aria-pressed="false"><span>04</span><b>路径</b><small>目标引导</small></button></div><h3 id="map-title">从点云到局部高程</h3><p id="map-description"></p><div class="map-metrics"><div><strong>128 × 128</strong><span>局部高程栅格</span></div><div><strong>50 <small>mm</small></strong><span>地图分辨率</span></div><div><strong>6.4 × 6.4 <small>m</small></strong><span>局部覆盖范围</span></div></div><div class="local-note"><b>两种地图模式</b><p>无先验地图时，利用局部结构与记忆栅格探索；加载 NVMP 先验地图后，使用结构似然场定位，并结合当前观测规划。</p></div><div class="map-status" id="map-status" aria-live="polite"></div></div></div>
+  <div class="nav-chain"><div><span>定位</span><strong>里程计 + IMU + SLF</strong><p>运动预测与雷达结构匹配融合，持续维护位姿与定位质量。</p></div><div><span>规划</span><strong>A* + 局部轨迹评估</strong><p>全局路径提供方向，局部候选轨迹结合地形、足迹与运动约束评分。</p></div><div><span>执行约束</span><strong>限幅 + 变化率 + 超时</strong><p>规划速度经命令管理进入轮腿控制，任务状态通过反馈回到上层。</p></div></div>
+</div></section>
+
+<section class="section intelligence" id="intelligence">
+  <div class="section-heading"><div><div class="eyebrow">04 / EDGE MULTIMODAL TASK ENGINE</div><h2>看见，听懂，<br>在边缘理解任务。</h2></div><p>视觉、语言、语音与业务服务部署在 RK3588，使用 NPU、CPU 和硬件编码器分工协作。模型输出汇入任务引擎，形成统一的目标和指令。</p></div>
+  <div class="model-tabs" role="group" aria-label="查看部署模型"><button class="active" data-ai="vision" aria-pressed="true"><span>◉</span>视觉感知</button><button data-ai="language" aria-pressed="false"><span>✳</span>语言理解</button><button data-ai="voice" aria-pressed="false"><span>≋</span>语音交互</button><button data-ai="media" aria-pressed="false"><span>▷</span>视频与服务</button></div>
+  <div class="ai-layout"><div class="ai-visual" id="ai-visual"></div><article class="ai-copy" aria-live="polite"><span class="resource-badge" id="ai-resource"></span><h3 id="ai-name"></h3><p id="ai-description"></p><div id="ai-pipeline" class="ai-pipeline"></div><div class="ai-output"><span>输出到任务层</span><p id="ai-output"></p></div></article></div>
+  <div class="deployment-row"><div><b>NPU</b><span>YOLO26n · Qwen3</span></div><div><b>CPU</b><span>语音 · RGB-D 关联 · 任务服务</span></div><div><b>MPP</b><span>H.264 硬件视频编码</span></div></div>
+</section>
+
+<section class="experience-section" id="experience"><div class="section">
+  <div class="section-heading"><div><div class="eyebrow">05 / FROM INTENT TO ACTION</div><h2>一句话，<br>连接整台机器人。</h2></div><p>从用户意图到结构化任务，再到探索、导航与反馈。选择一个任务，看看各个模块如何接力。</p></div>
+  <div class="scenario-buttons" role="group" aria-label="任务示例"><button class="active" data-scenario="find" aria-pressed="true">“帮我找到蓝色水瓶”</button><button data-scenario="patrol" aria-pressed="false">“去巡检点看看”</button><button data-scenario="follow" aria-pressed="false">“跟着我走”</button></div>
+  <div class="task-layout"><div class="task-flow"><div class="flow-head"><span>任务流程演示</span><button id="task-play" class="small-button">自动演示 ▷</button></div><div id="task-steps"></div><div class="flow-progress"><div id="task-progress"></div></div></div><article class="task-detail" aria-live="polite"><span class="mono" id="task-step-number"></span><h3 id="task-step-title"></h3><p id="task-step-description"></p><div class="task-message"><span id="task-module"></span><pre id="task-payload"></pre></div><p class="task-demo-note">交互示意 · 展示任务逻辑与模块协作</p><div class="task-controls"><button id="task-prev" class="small-button">← 上一步</button><button id="task-next" class="small-button">下一步 →</button></div></article></div>
+  <div class="terminals"><div class="terminal-copy"><span class="eyebrow">ONE ROBOT · TWO EXPERIENCES</span><h3>电脑统览全局。<br>手机随手操作。</h3><p>Web 控制台与微信小程序使用同一套任务和设备服务。地图、视频、语音助手与事件记录，围绕同一台机器人展开。</p><div class="terminal-tabs" role="group" aria-label="终端功能"><button data-client="web" class="active" aria-pressed="true">Web 控制台</button><button data-client="mini" aria-pressed="false">微信小程序</button></div><ul id="client-features"></ul></div><div class="terminal-preview" id="terminal-preview"></div></div>
+  <div class="access-panel"><div><span class="eyebrow">MEET YUNTUO</span><h3>从这里，连接云拓。</h3><p>在浏览器打开控制台，或使用微信扫描小程序码。</p><a class="button primary" href="https://lingxunrobot.cn" target="_blank" rel="noopener">lingxunrobot.cn <span>↗</span></a></div><button class="mini-code-button" id="show-mini-code" aria-haspopup="dialog"><img src="__MINI_CODE__" alt="云拓微信小程序码"><span>微信扫一扫 · 点击放大</span></button></div>
+</div></section>
+
+<section class="section repository" id="repository"><div class="section-heading"><div><div class="eyebrow">06 / EXPLORE THE PROJECT</div><h2>从系统，走进实现。</h2></div><p>云拓总仓库汇集项目介绍与文档。导航控制、RK 服务与前端应用，在各自仓库中持续维护。</p></div><div class="repo-grid"><a href="https://github.com/LRaina215/SOC_FPGA_NAV/tree/main" target="_blank" rel="noopener"><span>01 / FPGA</span><h3>导航与轮腿控制 <b>↗</b></h3><p>感知、地图、定位、规划、探索、策略推理，以及同片联合工程。</p><small>SOC_FPGA_NAV · main</small></a><a href="https://github.com/LRaina215/QHXD_Web/tree/yuntuo-fpga" target="_blank" rel="noopener"><span>02 / EDGE + WEB</span><h3>RK3588 与 Web <b>↗</b></h3><p>模型部署、任务编排、业务接口、Web 控制台与云网关。</p><small>QHXD_Web · yuntuo-fpga</small></a><a href="https://github.com/LRaina215/QHXD_Miniprogram/tree/yuntuo" target="_blank" rel="noopener"><span>03 / MOBILE</span><h3>微信小程序 <b>↗</b></h3><p>移动任务、地图与视频、语音助手和设备状态。</p><small>QHXD_Miniprogram · yuntuo</small></a></div><div class="document-links"><a href="https://github.com/LRaina215/SOC_FPGA_NAV/blob/main/docs/system_architecture.md" target="_blank" rel="noopener">总体设计方案 ↗</a><a href="https://github.com/LRaina215/SOC_FPGA_NAV/blob/main/docs/2_interface/icd.md" target="_blank" rel="noopener">接口设计 ICD ↗</a><a href="https://github.com/LRaina215/Yuntuo" target="_blank" rel="noopener">YunTuo 总仓库 ↗</a><a href="#top">返回顶部 ↑</a></div></section>
+</main>
+<footer><div class="footer-brand">YunTuo <span>Robot.</span></div><p>云拓 · FPGA 自主导航与轮腿控制 · RK3588 边缘多模态任务引擎</p><div><span>结构来源：car URDF / CAD</span><span>交互渲染：Three.js · MIT</span><span>FPGA 创新设计竞赛</span></div></footer>
+<noscript><div class="noscript">开启 JavaScript 后可体验车体拆解与流程交互；正文介绍仍可直接阅读。</div></noscript>
+<dialog id="mini-dialog" aria-labelledby="mini-dialog-title"><button id="close-mini-code" aria-label="关闭小程序码">×</button><h3 id="mini-dialog-title">微信扫一扫，进入云拓</h3><img id="mini-dialog-image" alt="云拓微信小程序码放大图"><p>云拓微信小程序</p></dialog>
+<script>/*__THREE__*/</script>
+<script id="robot-data" type="application/json">/*__MODEL__*/</script>
+<script>/*__APP__*/</script>
+</body></html>

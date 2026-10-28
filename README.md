@@ -6,6 +6,22 @@
 
 两轮自平衡底盘配合四路腿部舵机完成移动与姿态调节。雷达提供环境几何信息，RGB-D 相机识别目标并估计空间位置；导航系统据此规划运动，控制系统将运动目标转换为轮腿动作。
 
+## 交互式项目介绍
+
+[![云拓交互式项目介绍：车体拆解、系统架构与任务流程](showcase/assets/preview.png)](showcase/index.html)
+
+[下载 HTML 项目介绍](https://github.com/LRaina215/Yuntuo/raw/refs/heads/main/showcase/index.html) · [查看页面文件](showcase/index.html) · [页面使用与维护](showcase/README.md)
+
+下载后用 Edge 或 Chrome 打开，即可离线浏览。页面支持真实 URDF 车体旋转与拆解、部件查看、系统分工切换、导航地图分层，以及找物、巡检、跟随任务的流程演示。
+
+## 访问云拓
+
+**Web 控制台：[lingxunrobot.cn](https://lingxunrobot.cn)**
+
+微信扫描下方小程序码，打开云拓小程序。
+
+<img src="showcase/assets/miniprogram-code.png" alt="云拓微信小程序码" width="180">
+
 ## 代码入口
 
 | 部分 | 仓库 | 主要内容 |

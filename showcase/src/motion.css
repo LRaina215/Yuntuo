@@ -1,0 +1,117 @@
+/* YunTuo's existing robot mark, with a palette for the presentation page. */
+.yuntuo-mark {
+  display: block;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+}
+.partner-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.partner-brand .yuntuo-mark { width: 36px; height: 36px; border-radius: 8px; }
+.footer-brand { display: flex; justify-content: center; align-items: center; gap: 17px; }
+.footer-brand .yuntuo-mark { width: 54px; height: 54px; border-radius: 13px; }
+.footer-brand > span { color: var(--ink); font-weight: 550; }
+.footer-brand > span > span { color: var(--cyan); font-weight: 250; }
+
+/* Entrance motion is enabled by JS so the text stays visible without it. */
+.motion-ready .reveal {
+  opacity: 0;
+  transform: translateY(19px);
+  transition: opacity 650ms ease, transform 650ms cubic-bezier(.2,.7,.2,1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.motion-ready .reveal.is-visible { opacity: 1; transform: translateY(0); }
+button, .button, .repo-link, .repo-grid > a, .mini-code-button img {
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease,
+              box-shadow 220ms ease, transform 220ms cubic-bezier(.2,.7,.2,1);
+}
+.button.primary:hover { box-shadow: 0 7px 25px #7fe7e11a; }
+button:active:not(:disabled), .button:active { transform: translateY(1px); }
+.mini-code-button:hover img { transform: translateY(-3px); box-shadow: 0 8px 24px #0004; }
+
+/* Small moving accents explain the data flow; they pause outside the viewport. */
+.flow-line { position: relative; overflow: hidden; }
+.flow-line::after {
+  content: "";
+  position: absolute;
+  right: 17px;
+  top: 2px;
+  width: 3px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--cyan);
+  opacity: 0;
+  animation: data-flow 2.8s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.flow-line:nth-child(4)::after { animation-delay: .35s; }
+.flow-line:nth-child(6)::after { animation-delay: .7s; }
+.motion-live .flow-line::after { animation-play-state: running; }
+@keyframes data-flow {
+  0%, 12% { opacity: 0; transform: translateY(-3px); }
+  30%, 70% { opacity: .8; }
+  90%, 100% { opacity: 0; transform: translateY(22px); }
+}
+.vision-scene::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 20px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #7fe7e1aa, transparent);
+  box-shadow: 0 -5px 16px #7fe7e119;
+  animation: vision-scan 4.5s ease-in-out infinite;
+  animation-play-state: paused;
+  pointer-events: none;
+}
+.motion-live .vision-scene::after { animation-play-state: running; }
+.waveform i { animation-play-state: paused; }
+.motion-live .waveform i { animation-play-state: running; }
+@keyframes vision-scan {
+  0%, 10% { opacity: 0; transform: translateY(0); }
+  23%, 65% { opacity: .7; }
+  80%, 100% { opacity: 0; transform: translateY(160px); }
+}
+@media (hover: hover) and (pointer: fine) {
+  .system-node:hover { transform: translateX(3px); }
+  .model-tabs button:hover, .scenario-buttons button:hover { transform: translateY(-2px); }
+}
+@media (max-width: 1100px) {
+  .partners { gap: 12px; }
+  .partner-brand { gap: 7px; }
+  .partner-brand .yuntuo-mark { width: 30px; height: 30px; }
+  .partner-name { font-size: 10px; }
+  .partner-name b { font-size: 14px; }
+}
+@media (max-width: 800px) {
+  .yuntuo-mark { width: 35px; height: 35px; border-radius: 9px; }
+}
+@media (max-width: 440px) {
+  .partners { gap: 11px; }
+  .fpga-logo { width: 120px; }
+  #chy-brand, #chy-brand img { max-width: 64px; }
+  .partner-brand .yuntuo-mark { width: 29px; height: 29px; border-radius: 7px; }
+  .partner-name { font-size: 9px; }
+  .partner-name b { font-size: 13px; }
+  .footer-brand { gap: 12px; }
+  .footer-brand .yuntuo-mark { width: 43px; height: 43px; border-radius: 10px; }
+}
+@media (max-width: 360px) {
+  .partners { gap: 9px; }
+  .fpga-logo { width: 108px; }
+  #chy-brand, #chy-brand img { max-width: 52px; }
+  .partner-brand { gap: 5px; }
+  .partner-brand .yuntuo-mark { width: 25px; height: 25px; }
+  .partner-name { font-size: 8px; }
+  .partner-name b { font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .motion-ready .reveal { opacity: 1; transform: none; transition: none; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  html { scroll-behavior: auto; }
+}

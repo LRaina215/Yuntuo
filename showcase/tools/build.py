@@ -12,16 +12,17 @@ if chy.exists():
 else:
     chy_html='<span class="chy-wordmark" aria-label="CHY">CHY</span>'
 replacements={
-    '/*__STYLES__*/':(root/'src/styles.css').read_text(encoding='utf-8'),
+    '/*__STYLES__*/':(root/'src/styles.css').read_text(encoding='utf-8')+'\n'+(root/'src/motion.css').read_text(encoding='utf-8'),
     '__FPGA_LOGO__':data_url(root/'assets/fpga-competition.jpg','image/jpeg'),
     '__CHY_LOGO__':chy_html,
+    '__YUNTUO_LOGO__':data_url(root/'assets/yuntuo-avatar-dark.svg','image/svg+xml'),
     '__MINI_CODE__':data_url(root/'assets/miniprogram-code.png','image/png'),
     '/*__THREE__*/':'/*\n'+(root/'vendor/THREE-LICENSE.txt').read_text(encoding='utf-8')+'\n*/\n'+(root/'vendor/three.min.js').read_text(encoding='utf-8'),
     '/*__MODEL__*/':(root/'assets/robot-model.json').read_text(encoding='utf-8'),
     '/*__APP__*/':(root/'src/app.js').read_text(encoding='utf-8'),
 }
 for key,value in replacements.items():
-    if template.count(key)!=1:raise ValueError('Expected exactly one '+key)
+    if key not in template:raise ValueError('Missing placeholder '+key)
     template=template.replace(key,value)
 (root/'index.html').write_bytes(template.encode('utf-8'))
 print('Built showcase/index.html:',len(template.encode('utf-8')),'bytes')

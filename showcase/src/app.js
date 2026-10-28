@@ -1,7 +1,17 @@
 'use strict';
 const $ = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
-const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const motionQuery=matchMedia('(prefers-reduced-motion: reduce)');
+let reduceMotion=motionQuery.matches;
+const contentAnimations=new Map();
+function animateContent(el){
+  if(reduceMotion||!el)return;
+  contentAnimations.get(el)?.cancel();
+  const animation=el.animate([{opacity:.4,transform:'translateY(7px)'},{opacity:1,transform:'translateY(0)'}],{duration:280,easing:'cubic-bezier(.2,.7,.2,1)'});
+  contentAnimations.set(el,animation);
+  animation.onfinish=()=>contentAnimations.delete(el);
+}
+motionQuery.addEventListener('change',e=>{reduceMotion=e.matches;if(reduceMotion){contentAnimations.forEach(a=>a.cancel());contentAnimations.clear();$$('.reveal').forEach(el=>el.classList.add('is-visible'));}});
 function activate(selector, el) { $$(selector).forEach(b => { const yes = b===el; b.classList.toggle('active',yes); b.setAttribute('aria-pressed',String(yes)); }); }
 
 // Portable CAD viewer. The embedded model contains the supplied URDF hierarchy.
@@ -54,6 +64,7 @@ function activate(selector, el) { $$(selector).forEach(b => { const yes = b===el
     const groups={all:meshes.map(m=>m.name),base:['base'],left:['LeftBack_link','LeftFront_link'],right:['RightBack_link','RightFront_link'],wheels:['LeftWheel_link','RightWheel_link']};
     const groupCopy={all:['两轮 × 四路腿部舵机','拖动旋转 · 滚轮缩放 · 点击部件查看。拆解展示装配关系。'],base:['机身总成','车体主体与上层装配的承载基础，连接左右腿部机构。'],left:['左侧腿部机构','前后连杆配合腿部驱动，实现轮腿构型与机体高度调节。'],right:['右侧腿部机构','与左侧构成双侧轮腿机构，四路舵机接受策略与逆运动学目标。'],wheels:['双轮驱动总成','两侧驱动轮结合 IMU 与编码器反馈，完成平衡、前进与转向。']};
     let theta=2.38,phi=1.06,zoom=1,explode=0,auto=false,wire=false,selected='all',dirty=true,drag=null,frame=0,visible=true;
+    const pose={theta,phi,zoom:reduceMotion?1:1.08,explode:0};let lastTime=performance.now();
     const baseRadius=Math.max(size.x,size.y,size.z)*2.15;
     const raycaster=new T.Raycaster(), pointer=new T.Vector2();
     function setSelection(value){
@@ -67,14 +78,17 @@ function activate(selector, el) { $$(selector).forEach(b => { const yes = b===el
     }
     function updateCamera(){
       const narrow=stage.clientWidth/stage.clientHeight<1.1?1.18:1;
-      const r=baseRadius*zoom*narrow*(1+explode*.78);
-      camera.position.set(r*Math.sin(phi)*Math.sin(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.cos(theta));camera.lookAt(0,.018,0);
+      const r=baseRadius*pose.zoom*narrow*(1+pose.explode*.78);
+      camera.position.set(r*Math.sin(pose.phi)*Math.sin(pose.theta),r*Math.cos(pose.phi),r*Math.sin(pose.phi)*Math.cos(pose.theta));camera.lookAt(0,.018,0);
     }
     function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();dirty=true;}
     new ResizeObserver(resize).observe(stage);resize();
     new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)dirty=true;}).observe(stage);
-    function draw(){frame=requestAnimationFrame(draw);if(!visible||document.hidden)return;if(auto){theta+=.0035;dirty=true;}if(!dirty)return;
-      meshes.forEach(m=>m.position.set(...dirs[m.name]).multiplyScalar(explode));updateCamera();
+    function draw(time=performance.now()){frame=requestAnimationFrame(draw);const dt=Math.min(50,Math.max(1,time-lastTime));lastTime=time;if(!visible||document.hidden)return;if(auto){theta+=dt*.00022;dirty=true;}
+      const targets={theta,phi,zoom,explode},blend=reduceMotion||drag?1:1-Math.exp(-dt/105);
+      for(const key of Object.keys(pose)){const distance=targets[key]-pose[key];if(Math.abs(distance)>.0001){pose[key]+=distance*blend;dirty=true;}else pose[key]=targets[key];}
+      if(!dirty)return;
+      meshes.forEach(m=>m.position.set(...dirs[m.name]).multiplyScalar(pose.explode));updateCamera();
       if(!groups[selected]){const m=meshes.find(x=>x.name===selected);const pt=new T.Box3().setFromObject(m).getCenter(new T.Vector3());pt.y+=.04;pt.project(camera);const label=$('#part-marker');label.style.left=`${(pt.x*.5+.5)*stage.clientWidth}px`;label.style.top=`${(-pt.y*.5+.5)*stage.clientHeight}px`;}
       renderer.render(scene,camera);dirty=false;
     }
@@ -102,7 +116,7 @@ const systems={
  cloud:{k:'CONNECTED ROBOT',title:'一条接入链路，<br>连接设备、服务与用户。',desc:'云网关提供公网业务入口与鉴权，MediaMTX 承担视频中继。RK 产生一条车载媒体流，Web 与小程序使用适合各端的播放方式。',rows:[['接口网关','Nginx 转发业务请求，统一 HTTPS / WSS 接入路径。'],['视频分发','robot/front 媒体流通过 WebRTC / WHEP 与 HLS 提供播放。'],['状态同步','WebSocket 推送设备和任务变化，REST 用于查询与恢复。']],io:'视频、状态与任务数据经云端分发；局域网内 Web 也可直接访问 RK 服务。'},
  clients:{k:'HUMAN–ROBOT INTERACTION',title:'同一台机器人，<br>两种随手可用的入口。',desc:'Web 控制台适合地图管理和综合观察，微信小程序适合移动任务操作与语音交互。两端共享任务、地图、视频和状态接口。',rows:[['任务操作','定点移动、多点巡检、返航、找物与人员跟随，配合暂停、继续和取消。'],['地图与视频','查看先验地图、位姿、航点、目标和历史轨迹，观察车载视频。'],['助手与反馈','文字或语音表达任务，确认运动意图，并查看事件与任务状态。']],io:'用户请求先进入任务层核对参数和执行条件；界面依据反馈区分请求、执行中与完成状态。'}
 };
-function showSystem(key){const d=systems[key];$('#system-kicker').textContent=d.k;$('#system-title').innerHTML=d.title;$('#system-description').textContent=d.desc;$('#system-features').innerHTML=d.rows.map((r,i)=>`<div class="feature-row"><span>0${i+1}</span><b>${r[0]}</b><p>${r[1]}</p></div>`).join('');$('#system-interface').textContent=d.io;}
+function showSystem(key){const d=systems[key];$('#system-kicker').textContent=d.k;$('#system-title').innerHTML=d.title;$('#system-description').textContent=d.desc;$('#system-features').innerHTML=d.rows.map((r,i)=>`<div class="feature-row"><span>0${i+1}</span><b>${r[0]}</b><p>${r[1]}</p></div>`).join('');$('#system-interface').textContent=d.io;animateContent($('.system-detail'));}
 $$('[data-system]').forEach(b=>b.addEventListener('click',()=>{activate('[data-system]',b);showSystem(b.dataset.system);}));showSystem('fpga');
 
 // A compact, synthetic scene explains map layers. A* is local to this illustration.
@@ -137,7 +151,7 @@ function drawMap(){
  const [sx,sy]=point(start);ctx.strokeStyle='#d7f7f2';ctx.fillStyle='#7fe7e1';ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(sx,sy,8,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(sx,sy-5);ctx.lineTo(sx-4,sy+4);ctx.lineTo(sx+4,sy+4);ctx.closePath();ctx.fill();
  const [gx,gy]=point(goal);ctx.strokeStyle='#f5ab79';ctx.beginPath();ctx.arc(gx,gy,6,0,Math.PI*2);ctx.moveTo(gx-10,gy);ctx.lineTo(gx+10,gy);ctx.moveTo(gx,gy-10);ctx.lineTo(gx,gy+10);ctx.stroke();ctx.fillStyle='#f5ab79';ctx.font='9px Consolas';ctx.textAlign='left';ctx.fillText('GOAL',gx+10,gy-7);
 }
-function showLayer(key){layer=key;const d=layerData[key];$('#map-title').textContent=d.title;$('#map-description').textContent=d.desc;$('#map-mode-label').textContent=d.label;$('#map-legend').innerHTML=d.legend.map(([s,c])=>`<span><i style="background:${c}"></i>${s}</span>`).join('');$('#map-status').textContent=key==='path'?'点击空地设置示意目标；键盘方向键可微调目标。':'';drawMap();}
+function showLayer(key){layer=key;const d=layerData[key];$('#map-title').textContent=d.title;$('#map-description').textContent=d.desc;$('#map-mode-label').textContent=d.label;$('#map-legend').innerHTML=d.legend.map(([s,c])=>`<span><i style="background:${c}"></i>${s}</span>`).join('');$('#map-status').textContent=key==='path'?'点击空地设置示意目标；键盘方向键可微调目标。':'';drawMap();animateContent(mapCanvas);}
 $$('[data-layer]').forEach(b=>b.addEventListener('click',()=>{activate('[data-layer]',b);showLayer(b.dataset.layer);}));
 function setGoal(x,y){if(layer!=='path')return;if(blocked(x,y)){$('#map-status').textContent='该位置位于危险、膨胀或未知区域，请选择可通行区域。';return;}goal=[x,y];path=findPath();$('#map-status').textContent=path.length?'已更新目标与示意路径。':'当前示意场景中没有可达路径。';drawMap();}
 mapCanvas.addEventListener('click',e=>{const r=mapCanvas.getBoundingClientRect();setGoal(Math.floor((e.clientX-r.left)/mapRect.cw),Math.floor((e.clientY-r.top)/mapRect.ch));});
@@ -150,7 +164,7 @@ const aiModels={
  voice:{resource:'CPU · SHERPA-ONNX',name:'SenseVoice → Matcha + Vocos',desc:'车载语音由 SenseVoice 转为文本，经过任务理解后生成回复，再由 Matcha 与 Vocos 合成语音。小程序端也可通过微信语音识别输入任务。',flow:['麦克风','SenseVoice','任务理解','Matcha + Vocos'],output:'识别文本与语音播报，覆盖用户输入、任务确认、进度反馈和交互回复。',visual:'<span class="visual-label">VOICE / LISTEN & RESPOND</span><div class="waveform">'+Array.from({length:45},(_,i)=>`<i style="height:${12+Math.abs(Math.sin(i*.73))*58+Math.sin(i*.3)**2*30}px;animation-delay:${-i*.09}s"></i>`).join('')+'</div><div class="wave-caption">听见任务，也说出反馈。</div><span class="visual-caption">车载识别与合成 · 本地音频服务</span>'},
  media:{resource:'MPP + CPU · VIDEO / TASK SERVICES',name:'硬件视频与任务服务',desc:'MPP 完成 H.264 编码，媒体服务向 Web 与小程序提供播放。FastAPI 和 fpga_bridge 管理任务生命周期，结合导航状态与控制反馈同步用户界面。',flow:['相机视频','MPP 编码','MediaMTX','Web / 小程序'],output:'可播放的视频、任务事件与设备状态。客户端通过 WebSocket 接收状态变化，通过 REST 查询业务数据。',visual:'<span class="visual-label">MEDIA / ONE STREAM, TWO CLIENTS</span><div class="video-graphic">▷</div><div class="wave-caption">一条车载流，连接两端。</div><span class="visual-caption">H.264 → WebRTC / HLS</span>'}
 };
-function showAI(key){const d=aiModels[key];$('#ai-resource').textContent=d.resource;$('#ai-name').textContent=d.name;$('#ai-description').textContent=d.desc;$('#ai-pipeline').innerHTML=d.flow.map(s=>`<span>${s}</span>`).join('<b>→</b>');$('#ai-output').textContent=d.output;$('#ai-visual').innerHTML=d.visual;}
+function showAI(key){const d=aiModels[key];$('#ai-resource').textContent=d.resource;$('#ai-name').textContent=d.name;$('#ai-description').textContent=d.desc;$('#ai-pipeline').innerHTML=d.flow.map(s=>`<span>${s}</span>`).join('<b>→</b>');$('#ai-output').textContent=d.output;$('#ai-visual').innerHTML=d.visual;animateContent($('.ai-copy'));animateContent($('#ai-visual'));}
 $$('[data-ai]').forEach(b=>b.addEventListener('click',()=>{activate('[data-ai]',b);showAI(b.dataset.ai);}));showAI('vision');
 
 const scenarios={
@@ -160,16 +174,24 @@ const scenarios={
 };
 let scenario='find',step=0,taskTimer=null;
 function pauseTask(){clearInterval(taskTimer);taskTimer=null;$('#task-play').textContent='自动演示 ▷';$('#task-play').setAttribute('aria-pressed','false');}
-function showStep(i){step=i;const list=scenarios[scenario],d=list[i];$('#task-steps').innerHTML=list.map((x,n)=>`<button class="task-step ${n===i?'active':''}" data-step="${n}" aria-pressed="${n===i}"><span class="step-number">0${n+1}</span><span><b>${x[0]}</b><small>${x[1]}</small></span><b class="step-arrow">${n===i?'→':''}</b></button>`).join('');$$('[data-step]').forEach(b=>b.addEventListener('click',()=>{pauseTask();showStep(Number(b.dataset.step));}));$('#task-step-number').textContent=`STEP 0${i+1} / 0${list.length}`;$('#task-step-title').textContent=d[0];$('#task-step-description').textContent=d[2];$('#task-module').textContent=d[1];$('#task-payload').textContent=d[3];$('#task-progress').style.width=`${(i+1)/list.length*100}%`;$('#task-prev').disabled=i===0;$('#task-next').disabled=i===list.length-1;}
+function showStep(i){step=i;const list=scenarios[scenario],d=list[i];$('#task-steps').innerHTML=list.map((x,n)=>`<button class="task-step ${n===i?'active':''}" data-step="${n}" aria-pressed="${n===i}"><span class="step-number">0${n+1}</span><span><b>${x[0]}</b><small>${x[1]}</small></span><b class="step-arrow">${n===i?'→':''}</b></button>`).join('');$$('[data-step]').forEach(b=>b.addEventListener('click',()=>{pauseTask();showStep(Number(b.dataset.step));}));$('#task-step-number').textContent=`STEP 0${i+1} / 0${list.length}`;$('#task-step-title').textContent=d[0];$('#task-step-description').textContent=d[2];$('#task-module').textContent=d[1];$('#task-payload').textContent=d[3];$('#task-progress').style.width=`${(i+1)/list.length*100}%`;$('#task-prev').disabled=i===0;$('#task-next').disabled=i===list.length-1;animateContent($('.task-detail'));}
 $$('[data-scenario]').forEach(b=>b.addEventListener('click',()=>{pauseTask();activate('[data-scenario]',b);scenario=b.dataset.scenario;showStep(0);}));
 $('#task-prev').addEventListener('click',()=>{pauseTask();showStep(Math.max(0,step-1));});$('#task-next').addEventListener('click',()=>{pauseTask();showStep(Math.min(scenarios[scenario].length-1,step+1));});
 $('#task-play').addEventListener('click',()=>{if(taskTimer){pauseTask();return;}if(step===scenarios[scenario].length-1)showStep(0);$('#task-play').textContent='暂停演示 Ⅱ';$('#task-play').setAttribute('aria-pressed','true');taskTimer=setInterval(()=>{if(step>=scenarios[scenario].length-1){pauseTask();return;}showStep(step+1);if(step===scenarios[scenario].length-1)pauseTask();},2800);});document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseTask();});showStep(0);
 
 const miniMap='<svg viewBox="0 0 240 155" aria-label="地图与路径示意"><defs><pattern id="mg" width="15" height="15" patternUnits="userSpaceOnUse"><path d="M 15 0 H 0 V 15" fill="none" stroke="#2a4652" stroke-width=".5"/></pattern></defs><rect width="240" height="155" fill="url(#mg)"/><path d="M20 20H90V55H65V110H20ZM125 20H220V55H160V92H125ZM110 120H220V140H110Z" fill="#3c5b67"/><path d="M43 130L95 100L102 68L113 52L115 13L177 10L190 83" fill="none" stroke="#7fe7e1" stroke-width="2" stroke-dasharray="5 3"/><circle cx="43" cy="130" r="6" fill="#7fe7e1"/><circle cx="190" cy="83" r="5" fill="#f5ab79"/></svg>';
 function showClient(key){const web=key==='web';$('#client-features').innerHTML=(web?['地图、位姿、航点、目标与历史轨迹集中展示','先验地图上传与加载进度管理','WebRTC / WHEP 视频，任务与事件联动']:['总览、任务、助手、我的四个页面','HLS 视频与地图查看，移动任务操作','微信语音输入，任务确认与状态反馈']).map(x=>`<li>${x}</li>`).join('');$('#terminal-preview').innerHTML=web?`<div class="web-shell"><div class="shell-bar"><i></i><i></i><i></i><span>YunTuo / Robot Console</span></div><div class="web-content"><div class="web-sidebar"><b>云拓</b><span class="selected">运行总览</span><span>任务管理</span><span>地图管理</span><span>语音助手</span><span>事件记录</span></div><div class="web-main"><div class="mini-title">机器人总览<span>界面布局示意</span></div><div class="web-grid"><div class="map-mini">${miniMap}</div><div><div class="mini-video">▷</div><div class="mini-state">地图 / 视频 / 状态<br>任务与反馈同步</div></div></div><div class="web-event">任务事件 ── 意图 → 确认 → 执行 → 反馈</div></div></div></div><span class="terminal-label">功能布局示意</span>`:`<div class="phone-shell"><div class="phone-notch"></div><div class="phone-header">云拓机器人 <span>•••</span></div><div class="map-mini">${miniMap}</div><div class="phone-video">▷</div><div class="phone-task"><b>任务与状态</b>查看任务 · 语音输入 · 执行反馈</div><div class="phone-tabbar"><b>总览</b><span>任务</span><span>助手</span><span>我的</span></div></div><span class="terminal-label">微信小程序 · 功能布局示意</span>`;}
-$$('[data-client]').forEach(b=>b.addEventListener('click',()=>{activate('[data-client]',b);showClient(b.dataset.client);}));showClient('web');
+$$('[data-client]').forEach(b=>b.addEventListener('click',()=>{activate('[data-client]',b);showClient(b.dataset.client);animateContent($('#terminal-preview'));}));showClient('web');
 
 const miniDialog=$('#mini-dialog');
-$('#show-mini-code').addEventListener('click',()=>{$('#mini-dialog-image').src=$('#show-mini-code img').src;miniDialog.showModal();});
+$('#show-mini-code').addEventListener('click',()=>{$('#mini-dialog-image').src=$('#show-mini-code img').src;miniDialog.showModal();animateContent(miniDialog);});
 $('#close-mini-code').addEventListener('click',()=>miniDialog.close());
 miniDialog.addEventListener('click',e=>{if(e.target===miniDialog){const r=miniDialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)miniDialog.close();}});
+
+// Reveal once, close to the viewport; ambient illustrations pause off-screen.
+const revealObserver=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('is-visible');revealObserver.unobserve(entry.target);}});},{threshold:.06,rootMargin:'0px 0px -20px 0px'});
+$$('.hero-copy > *, .model-panel, .section-heading, .architecture-layout, .control-band, .navigation-layout, .nav-chain, .model-tabs, .ai-layout, .deployment-row, .scenario-buttons, .task-layout, .terminals, .access-panel, .repo-grid > a, .document-links').forEach(el=>{el.classList.add('reveal');if(reduceMotion)el.classList.add('is-visible');else revealObserver.observe(el);});
+$$('.hero-copy > *').forEach((el,i)=>el.style.setProperty('--reveal-delay',`${i*55}ms`));
+const ambientObserver=new IntersectionObserver(entries=>entries.forEach(entry=>entry.target.classList.toggle('motion-live',entry.isIntersecting)),{threshold:.1});
+$$('.system-map,.ai-visual').forEach(el=>ambientObserver.observe(el));
+document.documentElement.classList.add('motion-ready');

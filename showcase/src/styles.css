@@ -145,27 +145,6 @@ button:disabled:hover {
   margin-top:8px
 }
 
-.brand-symbol {
-  width:38px;
-  height:42px;
-  background:var(--cyan);
-  color:var(--bg);
-  font-size:32px;
-  display:grid;
-  place-content:center;
-  transform:skew(-8deg);
-  position:relative
-}
-
-.brand-symbol span {
-  font-size:17px;
-  position:absolute;
-  right:-7px;
-  top:-8px;
-  color:var(--cyan);
-  background:var(--bg)
-}
-
 .header nav {
   display:flex;
   gap:28px;
@@ -1987,12 +1966,6 @@ footer>div:last-child {
 
   .brand {
     font-size:19px
-  }
-
-  .brand-symbol {
-    width:29px;
-    height:34px;
-    font-size:27px
   }
 
   .brand small {

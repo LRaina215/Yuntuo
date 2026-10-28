@@ -20,6 +20,8 @@
 | 任务流程 | 选择找物、巡检或跟随，逐步查看或自动播放流程 |
 | 双端应用 | 查看 Web 与微信小程序的功能布局，并打开实际访问入口 |
 
+页面通过滚动入场、内容切换、视角与拆解缓动展示结构关系，配合轻量的流程光点和视觉扫描。流程与视觉动效在滚出屏幕后暂停；系统开启“减少动态效果”时，页面直接显示内容并关闭装饰动效。
+
 模型区域支持方向键旋转、`+` / `-` 缩放；路径图支持方向键微调目标；小程序码弹窗可按 Escape 关闭。其余控件支持键盘聚焦与操作。
 
 车体来自项目 `Structure/car/car/urdf/car.urdf` 和配套 STL，保留 7 个 link、6 个 joint 的装配关系。结构拆解用于展示部件组成。地图、任务与终端布局采用示意场景说明设计，页面不连接机器人控制接口。
@@ -32,6 +34,7 @@ showcase/
 ├── src/
 │   ├── template.html          # 页面结构与正文
 │   ├── styles.css             # 桌面、手机布局
+│   ├── motion.css             # 品牌适配、动效与减少动态效果设置
 │   └── app.js                 # 三维模型与页面交互
 ├── assets/
 │   ├── robot-model.json       # 压缩后的 URDF 网格与装配信息
@@ -39,6 +42,8 @@ showcase/
 │   ├── chy-logo.png           # CHY 透明底单色标志
 │   ├── chy-reference.png      # CHY 原始设计参考
 │   ├── miniprogram-code.png   # 云拓小程序码原图
+│   ├── yuntuo-avatar.svg      # 与 Web 同源的机器人标志
+│   ├── yuntuo-avatar-dark.svg # 介绍页深色配色版本
 │   └── preview.png            # README 页面预览
 ├── vendor/                    # Three.js r149 与 MIT 许可
 └── tools/
@@ -67,6 +72,7 @@ python showcase/tools/build.py
 - 结构交互参考用户提供的 `robot-teardown(1).html`；模型采用云拓自己的 URDF / STL。
 - Three.js r149 来自参考页内附的 MIT 版本；许可见 [THREE-LICENSE.txt](vendor/THREE-LICENSE.txt)，完整许可也随单文件页面分发。
 - FPGA 竞赛标志与小程序码使用项目提供的原图。
+- YunTuo Robot 使用 Web 与小程序内现有的轮腿机器人图形，介绍页保留几何轮廓并采用深色页面配色，详见 [branding.md](branding.md)。
 - CHY 标志由原始小写字标与双弧线造型重新设计，生成方式与提示词见 [branding.md](branding.md)。页面通过 CSS 为透明底单色标志着色。
 
 更新公开介绍时同步正文、组件链接和 README 预览；具体构建、测试与联调记录仍保留在各组件仓库。

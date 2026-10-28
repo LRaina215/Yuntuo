@@ -4,6 +4,7 @@ const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const motionQuery=matchMedia('(prefers-reduced-motion: reduce)');
 let reduceMotion=motionQuery.matches;
 const contentAnimations=new Map();
+const tours={};
 function animateContent(el){
   if(reduceMotion||!el)return;
   contentAnimations.get(el)?.cancel();
@@ -172,16 +173,40 @@ const scenarios={
  patrol:[['选择巡检点','Web / 小程序','从地图选定航点或巡检点序列，形成有顺序的导航任务。','任务类型：巡检\n目标：航点序列'],['检查任务条件','RK · 任务编排','检查地图、位姿、链路与任务参数，组织航点和停留逻辑，再下发导航任务。','预检 → 航点下发\n导航接口：GOAL / WAYPOINTS'],['定位与全局规划','FPGA · PicoRV32 + RTL','里程计和 IMU 提供预测，雷达 SLF 匹配修正位姿。A* 在地图中生成路径引导。','轮里程计 + IMU + SLF\n地图 → A* 路径'],['避障与轮腿执行','FPGA · 导航与控制','局部轨迹评估考虑地形和机器人足迹，速度经过约束后交给原 4500 策略与执行器闭环。','局部轨迹 → SAFE\n原 4500 → IK / 轮速闭环'],['到点核对','RK · 任务状态机','到点后结合距离、定位状态与新鲜运动反馈复核到达，按任务安排停留或前往下一点。','导航到达 → 目标与反馈核对\n停留 / 下一航点'],['同步巡检结果','Web / 小程序','任务事件、轨迹与状态持续呈现，用户可查看视频，或选择暂停、继续与取消。','状态 + 事件 + 视频\n多端共享任务进度']],
  follow:[['指定跟随任务','用户 → RK','用户选择人员跟随，任务层确认类型与运行条件，建立跟随任务。','任务类型：人员跟随\n目标类别：person'],['识别并关联人员','RK · YOLO + RGB-D','视觉服务检测人员、关联身份，并通过深度估计目标在机身坐标系中的位置。','person → 目标 ID\n深度 → 三维位置'],['持续更新目标','RK → FPGA TARGET','视觉目标按受控频率发送，过滤延时过大的帧。导航使用有效目标位置驱动跟踪。','目标位置 + 置信度 + 延时\nTARGET → 导航'],['地形约束下跟踪','FPGA 导航与控制','跟踪期望结合当前局部地图，选择符合地形和运动约束的速度，由轮腿控制执行。','目标方向 + 局部代价\n速度约束 → 轮腿动作'],['处理遮挡与丢失','视觉跟踪 + 任务模式','目标失去有效观测后进入丢失处理，任务模式决定后续搜索或停止行为。','有效期核对 → 丢失处理\n搜索 / 停止'],['用户结束跟随','Web / 小程序 → RK','停止请求进入任务流程，撤销运动目标，并根据新鲜控制反馈确认停止结果。','停止请求 → 执行反馈\n任务状态同步']]
 };
-let scenario='find',step=0,taskTimer=null;
-function pauseTask(){clearInterval(taskTimer);taskTimer=null;$('#task-play').textContent='自动演示 ▷';$('#task-play').setAttribute('aria-pressed','false');}
+let scenario='find',step=0;
+function pauseTask(){tours.task?.pause();}
 function showStep(i){step=i;const list=scenarios[scenario],d=list[i];$('#task-steps').innerHTML=list.map((x,n)=>`<button class="task-step ${n===i?'active':''}" data-step="${n}" aria-pressed="${n===i}"><span class="step-number">0${n+1}</span><span><b>${x[0]}</b><small>${x[1]}</small></span><b class="step-arrow">${n===i?'→':''}</b></button>`).join('');$$('[data-step]').forEach(b=>b.addEventListener('click',()=>{pauseTask();showStep(Number(b.dataset.step));}));$('#task-step-number').textContent=`STEP 0${i+1} / 0${list.length}`;$('#task-step-title').textContent=d[0];$('#task-step-description').textContent=d[2];$('#task-module').textContent=d[1];$('#task-payload').textContent=d[3];$('#task-progress').style.width=`${(i+1)/list.length*100}%`;$('#task-prev').disabled=i===0;$('#task-next').disabled=i===list.length-1;animateContent($('.task-detail'));}
 $$('[data-scenario]').forEach(b=>b.addEventListener('click',()=>{pauseTask();activate('[data-scenario]',b);scenario=b.dataset.scenario;showStep(0);}));
 $('#task-prev').addEventListener('click',()=>{pauseTask();showStep(Math.max(0,step-1));});$('#task-next').addEventListener('click',()=>{pauseTask();showStep(Math.min(scenarios[scenario].length-1,step+1));});
-$('#task-play').addEventListener('click',()=>{if(taskTimer){pauseTask();return;}if(step===scenarios[scenario].length-1)showStep(0);$('#task-play').textContent='暂停演示 Ⅱ';$('#task-play').setAttribute('aria-pressed','true');taskTimer=setInterval(()=>{if(step>=scenarios[scenario].length-1){pauseTask();return;}showStep(step+1);if(step===scenarios[scenario].length-1)pauseTask();},2800);});document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseTask();});showStep(0);
+showStep(0);
 
-const miniMap='<svg viewBox="0 0 240 155" aria-label="地图与路径示意"><defs><pattern id="mg" width="15" height="15" patternUnits="userSpaceOnUse"><path d="M 15 0 H 0 V 15" fill="none" stroke="#2a4652" stroke-width=".5"/></pattern></defs><rect width="240" height="155" fill="url(#mg)"/><path d="M20 20H90V55H65V110H20ZM125 20H220V55H160V92H125ZM110 120H220V140H110Z" fill="#3c5b67"/><path d="M43 130L95 100L102 68L113 52L115 13L177 10L190 83" fill="none" stroke="#7fe7e1" stroke-width="2" stroke-dasharray="5 3"/><circle cx="43" cy="130" r="6" fill="#7fe7e1"/><circle cx="190" cy="83" r="5" fill="#f5ab79"/></svg>';
-function showClient(key){const web=key==='web';$('#client-features').innerHTML=(web?['地图、位姿、航点、目标与历史轨迹集中展示','先验地图上传与加载进度管理','WebRTC / WHEP 视频，任务与事件联动']:['总览、任务、助手、我的四个页面','HLS 视频与地图查看，移动任务操作','微信语音输入，任务确认与状态反馈']).map(x=>`<li>${x}</li>`).join('');$('#terminal-preview').innerHTML=web?`<div class="web-shell"><div class="shell-bar"><i></i><i></i><i></i><span>YunTuo / Robot Console</span></div><div class="web-content"><div class="web-sidebar"><b>云拓</b><span class="selected">运行总览</span><span>任务管理</span><span>地图管理</span><span>语音助手</span><span>事件记录</span></div><div class="web-main"><div class="mini-title">机器人总览<span>界面布局示意</span></div><div class="web-grid"><div class="map-mini">${miniMap}</div><div><div class="mini-video">▷</div><div class="mini-state">地图 / 视频 / 状态<br>任务与反馈同步</div></div></div><div class="web-event">任务事件 ── 意图 → 确认 → 执行 → 反馈</div></div></div></div><span class="terminal-label">功能布局示意</span>`:`<div class="phone-shell"><div class="phone-notch"></div><div class="phone-header">云拓机器人 <span>•••</span></div><div class="map-mini">${miniMap}</div><div class="phone-video">▷</div><div class="phone-task"><b>任务与状态</b>查看任务 · 语音输入 · 执行反馈</div><div class="phone-tabbar"><b>总览</b><span>任务</span><span>助手</span><span>我的</span></div></div><span class="terminal-label">微信小程序 · 功能布局示意</span>`;}
-$$('[data-client]').forEach(b=>b.addEventListener('click',()=>{activate('[data-client]',b);showClient(b.dataset.client);animateContent($('#terminal-preview'));}));showClient('web');
+const clientScreens=JSON.parse($('#client-screens').textContent);
+let clientFrame=0;
+function showClient(key,shot=1){
+  const web=key==='web';clientFrame=web?0:shot;
+  const screen=clientScreens[clientFrame];
+  activate('[data-client]',$(`[data-client="${web?'web':'mini'}"]`));
+  $('#client-features').innerHTML=(web?['地图、位姿、航点、目标与历史轨迹集中展示','先验地图上传与加载进度管理','WebRTC / WHEP 视频，任务与事件联动']:['总览、任务、助手、我的四个页面','HLS 视频与地图查看，移动任务操作','微信语音输入，任务确认与状态反馈']).map(x=>`<li>${x}</li>`).join('');
+  $('#terminal-preview').innerHTML=`<figure class="client-capture ${web?'web-capture':'mini-capture'}"><div class="capture-heading"><span>${screen.title}</span><span>${web?'lingxunrobot.cn':'WECHAT MINI PROGRAM'}</span></div><button class="capture-image" aria-label="放大查看${screen.title}" title="放大查看原图"><img src="${screen.src}" alt="${screen.title}实际界面截图"></button><figcaption>${screen.source}<span>点击查看原图 ↗</span></figcaption>${web?'':`<div class="capture-tabs" role="group" aria-label="小程序截图"><button data-mini-shot="1" class="${shot===1?'active':''}" aria-pressed="${shot===1}">总览</button><button data-mini-shot="2" class="${shot===2?'active':''}" aria-pressed="${shot===2}">语音助手</button></div>`}</figure>`;
+  $('.capture-image').addEventListener('click',()=>openScreen(clientFrame));
+  $$('[data-mini-shot]').forEach(b=>b.addEventListener('click',()=>showClient('mini',Number(b.dataset.miniShot))));
+  animateContent($('#terminal-preview'));
+}
+$$('[data-client]').forEach(b=>b.addEventListener('click',()=>showClient(b.dataset.client)));showClient('web');
+
+const screenDialog=$('#screen-dialog');let screenIndex=0;
+function openScreen(index){
+  screenIndex=(index+clientScreens.length)%clientScreens.length;
+  const screen=clientScreens[screenIndex];
+  $('#screen-dialog-title').textContent=screen.title;$('#screen-dialog-source').textContent=screen.source;
+  $('#screen-dialog-image').src=screen.src;$('#screen-dialog-image').alt=screen.title+'实际界面截图';
+  if(!screenDialog.open){screenDialog.showModal();animateContent(screenDialog);}
+}
+$('#close-screen').addEventListener('click',()=>screenDialog.close());
+$('#screen-prev').addEventListener('click',()=>openScreen(screenIndex-1));
+$('#screen-next').addEventListener('click',()=>openScreen(screenIndex+1));
+screenDialog.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'){e.preventDefault();openScreen(screenIndex-1);}if(e.key==='ArrowRight'){e.preventDefault();openScreen(screenIndex+1);}});
+screenDialog.addEventListener('click',e=>{if(e.target===screenDialog){const r=screenDialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)screenDialog.close();}});
 
 const miniDialog=$('#mini-dialog');
 $('#show-mini-code').addEventListener('click',()=>{$('#mini-dialog-image').src=$('#show-mini-code img').src;miniDialog.showModal();animateContent(miniDialog);});
@@ -195,3 +220,52 @@ $$('.hero-copy > *').forEach((el,i)=>el.style.setProperty('--reveal-delay',`${i*
 const ambientObserver=new IntersectionObserver(entries=>entries.forEach(entry=>entry.target.classList.toggle('motion-live',entry.isIntersecting)),{threshold:.1});
 $$('.system-map,.ai-visual').forEach(el=>ambientObserver.observe(el));
 document.documentElement.classList.add('motion-ready');
+
+function createTour({root,selector,delay=7000,label='内容讲解',count,getIndex,select,button,manualRoots=[]}){
+  const options=selector?$$(selector):null;
+  count??=options.length;
+  getIndex??=()=>Math.max(0,options.findIndex(b=>b.classList.contains('active')));
+  const bar=document.createElement('div');bar.className='tour-bar';
+  bar.innerHTML=`<span class="tour-title">${label}</span><span class="tour-state"></span><span class="tour-progress" aria-hidden="true"><i></i></span><span class="tour-count mono"></span>`;
+  button??=document.createElement('button');button.classList.add('small-button','tour-toggle');bar.appendChild(button);root.before(bar);
+  const progress=$('.tour-progress i',bar),status=$('.tour-state',bar),counter=$('.tour-count',bar);
+  const state={enabled:!reduceMotion,visible:false,hover:false,focus:false,timer:null,remaining:delay,started:0};
+  function stopClock(){
+    if(state.timer!==null){clearTimeout(state.timer);state.timer=null;state.remaining=Math.max(0,state.remaining-(performance.now()-state.started));}
+    progress.style.transition='none';progress.style.transform=`scaleX(${1-state.remaining/delay})`;
+  }
+  function sync(reset=false){
+    stopClock();if(reset)state.remaining=delay;
+    const running=state.enabled&&state.visible&&!document.hidden&&!state.hover&&!state.focus;
+    root.dataset.playback=running?'playing':state.enabled?'waiting':'paused';
+    button.textContent=state.enabled?'暂停轮播 Ⅱ':'自动轮播 ▷';button.setAttribute('aria-pressed',String(state.enabled));
+    counter.textContent=`${getIndex()+1} / ${count}`;
+    status.textContent=!state.enabled?'手动浏览':state.hover||state.focus?'阅读暂停':state.visible?'自动讲解':'进入视野后播放';
+    $$('[aria-live]',root).forEach(el=>el.setAttribute('aria-live',running?'off':'polite'));
+    progress.style.transform=`scaleX(${1-state.remaining/delay})`;
+    if(running){
+      progress.getBoundingClientRect();progress.style.transition=`transform ${state.remaining}ms linear`;progress.style.transform='scaleX(1)';
+      state.started=performance.now();
+      state.timer=setTimeout(()=>{state.timer=null;state.remaining=delay;select((getIndex()+1)%count);sync(true);},state.remaining);
+    }
+  }
+  const pause=()=>{state.enabled=false;sync(true);};
+  button.addEventListener('click',()=>{state.enabled=!state.enabled;state.hover=false;state.focus=false;sync(true);});
+  [root,...manualRoots].forEach(el=>el.addEventListener('click',pause));
+  root.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'){state.hover=true;sync();}});
+  root.addEventListener('pointerleave',()=>{state.hover=false;sync();});
+  root.addEventListener('focusin',()=>{state.focus=true;sync();});
+  root.addEventListener('focusout',()=>queueMicrotask(()=>{state.focus=root.contains(document.activeElement);sync();}));
+  document.addEventListener('visibilitychange',()=>sync());
+  new IntersectionObserver(entries=>{state.visible=entries[0].isIntersecting&&entries[0].intersectionRatio>=.18;sync();},{threshold:[0,.18],rootMargin:'-80px 0px -45px 0px'}).observe(root);
+  sync();return {pause};
+}
+function selectOption(selector,index,render,key){const options=$$(selector),button=options[index];activate(selector,button);render(button.dataset[key]);}
+tours.system=createTour({root:$('.architecture-layout'),selector:'[data-system]',delay:8000,label:'系统分工',select:i=>selectOption('[data-system]',i,showSystem,'system')});
+tours.map=createTour({root:$('.navigation-layout'),selector:'[data-layer]',delay:6500,label:'导航链路',select:i=>selectOption('[data-layer]',i,showLayer,'layer')});
+tours.ai=createTour({root:$('.ai-layout'),selector:'[data-ai]',manualRoots:[$('.model-tabs')],delay:7500,label:'边缘模型',select:i=>selectOption('[data-ai]',i,showAI,'ai')});
+tours.client=createTour({root:$('.terminals'),count:3,getIndex:()=>clientFrame,delay:9000,label:'双端界面',select:i=>showClient(i===0?'web':'mini',i)});
+const scenarioKeys=Object.keys(scenarios);
+tours.task=createTour({root:$('.task-layout'),count:18,getIndex:()=>scenarioKeys.indexOf(scenario)*6+step,delay:4500,label:'任务流程',button:$('#task-play'),manualRoots:[$('.scenario-buttons')],select:i=>{scenario=scenarioKeys[Math.floor(i/6)];activate('[data-scenario]',$(`[data-scenario="${scenario}"]`));showStep(i%6);}});
+motionQuery.addEventListener('change',e=>{if(e.matches)Object.values(tours).forEach(t=>t.pause());});
+window.addEventListener('pagehide',()=>Object.values(tours).forEach(t=>t.pause()));

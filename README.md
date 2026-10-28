@@ -12,7 +12,7 @@
 
 [下载 HTML 项目介绍](https://github.com/LRaina215/Yuntuo/raw/refs/heads/main/showcase/index.html) · [查看页面文件](showcase/index.html) · [页面使用与维护](showcase/README.md)
 
-下载后用 Edge 或 Chrome 打开，即可离线浏览。页面支持真实 URDF 车体旋转与拆解、部件查看、系统分工切换、导航地图分层，以及找物、巡检、跟随任务的流程演示。
+下载后用 Edge 或 Chrome 打开，即可离线浏览。页面支持真实 URDF 车体旋转与拆解、部件查看、架构与模型自动讲解、导航地图分层，以及找物、巡检、跟随任务的流程演示；Web 和小程序区域展示实际界面截图，可点击放大。
 
 介绍页沿用 Web 与小程序的机器人品牌图形，提供滚动入场、视角与拆解过渡，并适配系统的“减少动态效果”设置。
 

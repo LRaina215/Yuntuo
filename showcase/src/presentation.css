@@ -1,23 +1,8 @@
-.tour-bar {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  padding: 8px 0;
-  margin: 0 0 17px;
-  font-size: 10px;
-  color: var(--muted);
-  flex-wrap: wrap;
-}
-.tour-title { color: var(--ink); font-size: 11px; }
-.tour-state { min-width: 53px; color: #7f9aa8; }
-.tour-progress { width: 90px; height: 2px; background: var(--line); overflow: hidden; }
-.tour-progress i { display: block; width: 100%; height: 100%; background: var(--cyan); transform-origin: left; transform: scaleX(0); }
-.tour-toggle { margin-left: auto; min-width: 97px; }
-.tour-count { letter-spacing: 0; }
-.tour-bar + .ai-layout { margin-top: 20px; }
-.tour-bar:has(+ .terminals) { margin-top: 60px; }
-.tour-bar + .terminals { margin-top: 15px; padding-top: 32px; }
-.tour-bar + .task-layout .flow-head { margin-bottom: 12px; }
+/* Keep the original section spacing and align the model frame with its copy. */
+.ai-layout { align-items: start; }
+.ai-copy { min-width: 0; }
+.ai-copy .resource-badge { display: table; line-height: 1.4; }
+.ai-scene { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; padding: inherit; }
 .terminal-preview { height: 580px; min-height: 580px; width: 100%; align-items: center; }
 .client-capture { margin: 0; width: 100%; display: flex; flex-direction: column; align-items: center; }
 .capture-heading { display: flex; justify-content: space-between; width: 100%; gap: 18px; color: #bdd1db; font-size: 11px; margin-bottom: 15px; }
@@ -42,13 +27,8 @@
 #screen-dialog-source { font-size: 10px; color: var(--muted); text-align: center; }
 @media (max-width: 800px) {
   .terminal-preview { height: 570px; min-height: 570px; }
-  .tour-bar:has(+ .terminals) { margin-top: 38px; }
 }
 @media (max-width: 440px) {
-  .tour-bar { gap: 9px; font-size: 9px; }
-  .tour-progress { width: 48px; }
-  .tour-title { font-size: 10px; }
-  .tour-toggle { min-width: 88px; font-size: 10px; padding: 4px 9px; }
   .terminal-preview { height: 500px; min-height: 500px; }
   .mini-capture .capture-image img { max-height: 380px; }
   .capture-heading { font-size: 10px; }

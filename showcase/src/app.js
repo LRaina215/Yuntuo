@@ -5,10 +5,11 @@ const motionQuery=matchMedia('(prefers-reduced-motion: reduce)');
 let reduceMotion=motionQuery.matches;
 const contentAnimations=new Map();
 const tours={};
-function animateContent(el){
+function animateContent(el,slide=true){
   if(reduceMotion||!el)return;
   contentAnimations.get(el)?.cancel();
-  const animation=el.animate([{opacity:.4,transform:'translateY(7px)'},{opacity:1,transform:'translateY(0)'}],{duration:280,easing:'cubic-bezier(.2,.7,.2,1)'});
+  const frames=slide?[{opacity:.4,transform:'translateY(7px)'},{opacity:1,transform:'translateY(0)'}]:[{opacity:.4},{opacity:1}];
+  const animation=el.animate(frames,{duration:280,easing:'cubic-bezier(.2,.7,.2,1)'});
   contentAnimations.set(el,animation);
   animation.onfinish=()=>contentAnimations.delete(el);
 }
@@ -165,7 +166,7 @@ const aiModels={
  voice:{resource:'CPU · SHERPA-ONNX',name:'SenseVoice → Matcha + Vocos',desc:'车载语音由 SenseVoice 转为文本，经过任务理解后生成回复，再由 Matcha 与 Vocos 合成语音。小程序端也可通过微信语音识别输入任务。',flow:['麦克风','SenseVoice','任务理解','Matcha + Vocos'],output:'识别文本与语音播报，覆盖用户输入、任务确认、进度反馈和交互回复。',visual:'<span class="visual-label">VOICE / LISTEN & RESPOND</span><div class="waveform">'+Array.from({length:45},(_,i)=>`<i style="height:${12+Math.abs(Math.sin(i*.73))*58+Math.sin(i*.3)**2*30}px;animation-delay:${-i*.09}s"></i>`).join('')+'</div><div class="wave-caption">听见任务，也说出反馈。</div><span class="visual-caption">车载识别与合成 · 本地音频服务</span>'},
  media:{resource:'MPP + CPU · VIDEO / TASK SERVICES',name:'硬件视频与任务服务',desc:'MPP 完成 H.264 编码，媒体服务向 Web 与小程序提供播放。FastAPI 和 fpga_bridge 管理任务生命周期，结合导航状态与控制反馈同步用户界面。',flow:['相机视频','MPP 编码','MediaMTX','Web / 小程序'],output:'可播放的视频、任务事件与设备状态。客户端通过 WebSocket 接收状态变化，通过 REST 查询业务数据。',visual:'<span class="visual-label">MEDIA / ONE STREAM, TWO CLIENTS</span><div class="video-graphic">▷</div><div class="wave-caption">一条车载流，连接两端。</div><span class="visual-caption">H.264 → WebRTC / HLS</span>'}
 };
-function showAI(key){const d=aiModels[key];$('#ai-resource').textContent=d.resource;$('#ai-name').textContent=d.name;$('#ai-description').textContent=d.desc;$('#ai-pipeline').innerHTML=d.flow.map(s=>`<span>${s}</span>`).join('<b>→</b>');$('#ai-output').textContent=d.output;$('#ai-visual').innerHTML=d.visual;animateContent($('.ai-copy'));animateContent($('#ai-visual'));}
+function showAI(key){const d=aiModels[key];$('#ai-resource').textContent=d.resource;$('#ai-name').textContent=d.name;$('#ai-description').textContent=d.desc;$('#ai-pipeline').innerHTML=d.flow.map(s=>`<span>${s}</span>`).join('<b>→</b>');$('#ai-output').textContent=d.output;$('#ai-visual').innerHTML=`<div class="ai-scene">${d.visual}</div>`;animateContent($('.ai-copy'),false);animateContent($('.ai-scene'),false);}
 $$('[data-ai]').forEach(b=>b.addEventListener('click',()=>{activate('[data-ai]',b);showAI(b.dataset.ai);}));showAI('vision');
 
 const scenarios={
@@ -174,10 +175,9 @@ const scenarios={
  follow:[['指定跟随任务','用户 → RK','用户选择人员跟随，任务层确认类型与运行条件，建立跟随任务。','任务类型：人员跟随\n目标类别：person'],['识别并关联人员','RK · YOLO + RGB-D','视觉服务检测人员、关联身份，并通过深度估计目标在机身坐标系中的位置。','person → 目标 ID\n深度 → 三维位置'],['持续更新目标','RK → FPGA TARGET','视觉目标按受控频率发送，过滤延时过大的帧。导航使用有效目标位置驱动跟踪。','目标位置 + 置信度 + 延时\nTARGET → 导航'],['地形约束下跟踪','FPGA 导航与控制','跟踪期望结合当前局部地图，选择符合地形和运动约束的速度，由轮腿控制执行。','目标方向 + 局部代价\n速度约束 → 轮腿动作'],['处理遮挡与丢失','视觉跟踪 + 任务模式','目标失去有效观测后进入丢失处理，任务模式决定后续搜索或停止行为。','有效期核对 → 丢失处理\n搜索 / 停止'],['用户结束跟随','Web / 小程序 → RK','停止请求进入任务流程，撤销运动目标，并根据新鲜控制反馈确认停止结果。','停止请求 → 执行反馈\n任务状态同步']]
 };
 let scenario='find',step=0;
-function pauseTask(){tours.task?.pause();}
-function showStep(i){step=i;const list=scenarios[scenario],d=list[i];$('#task-steps').innerHTML=list.map((x,n)=>`<button class="task-step ${n===i?'active':''}" data-step="${n}" aria-pressed="${n===i}"><span class="step-number">0${n+1}</span><span><b>${x[0]}</b><small>${x[1]}</small></span><b class="step-arrow">${n===i?'→':''}</b></button>`).join('');$$('[data-step]').forEach(b=>b.addEventListener('click',()=>{pauseTask();showStep(Number(b.dataset.step));}));$('#task-step-number').textContent=`STEP 0${i+1} / 0${list.length}`;$('#task-step-title').textContent=d[0];$('#task-step-description').textContent=d[2];$('#task-module').textContent=d[1];$('#task-payload').textContent=d[3];$('#task-progress').style.width=`${(i+1)/list.length*100}%`;$('#task-prev').disabled=i===0;$('#task-next').disabled=i===list.length-1;animateContent($('.task-detail'));}
-$$('[data-scenario]').forEach(b=>b.addEventListener('click',()=>{pauseTask();activate('[data-scenario]',b);scenario=b.dataset.scenario;showStep(0);}));
-$('#task-prev').addEventListener('click',()=>{pauseTask();showStep(Math.max(0,step-1));});$('#task-next').addEventListener('click',()=>{pauseTask();showStep(Math.min(scenarios[scenario].length-1,step+1));});
+function showStep(i){step=i;const list=scenarios[scenario],d=list[i];$('#task-steps').innerHTML=list.map((x,n)=>`<button class="task-step ${n===i?'active':''}" data-step="${n}" aria-pressed="${n===i}"><span class="step-number">0${n+1}</span><span><b>${x[0]}</b><small>${x[1]}</small></span><b class="step-arrow">${n===i?'→':''}</b></button>`).join('');$$('[data-step]').forEach(b=>b.addEventListener('click',()=>{showStep(Number(b.dataset.step));}));$('#task-step-number').textContent=`STEP 0${i+1} / 0${list.length}`;$('#task-step-title').textContent=d[0];$('#task-step-description').textContent=d[2];$('#task-module').textContent=d[1];$('#task-payload').textContent=d[3];$('#task-progress').style.width=`${(i+1)/list.length*100}%`;$('#task-prev').disabled=i===0;$('#task-next').disabled=i===list.length-1;animateContent($('.task-detail'));}
+$$('[data-scenario]').forEach(b=>b.addEventListener('click',()=>{activate('[data-scenario]',b);scenario=b.dataset.scenario;showStep(0);}));
+$('#task-prev').addEventListener('click',()=>{showStep(Math.max(0,step-1));});$('#task-next').addEventListener('click',()=>{showStep(Math.min(scenarios[scenario].length-1,step+1));});
 showStep(0);
 
 const clientScreens=JSON.parse($('#client-screens').textContent);
@@ -221,51 +221,37 @@ const ambientObserver=new IntersectionObserver(entries=>entries.forEach(entry=>e
 $$('.system-map,.ai-visual').forEach(el=>ambientObserver.observe(el));
 document.documentElement.classList.add('motion-ready');
 
-function createTour({root,selector,delay=7000,label='内容讲解',count,getIndex,select,button,manualRoots=[]}){
+// Automatic presentation, without extra playback controls or manual modes.
+function createTour({root,selector,delay=7000,count,getIndex,select,manualRoots=[]}){
   const options=selector?$$(selector):null;
   count??=options.length;
   getIndex??=()=>Math.max(0,options.findIndex(b=>b.classList.contains('active')));
-  const bar=document.createElement('div');bar.className='tour-bar';
-  bar.innerHTML=`<span class="tour-title">${label}</span><span class="tour-state"></span><span class="tour-progress" aria-hidden="true"><i></i></span><span class="tour-count mono"></span>`;
-  button??=document.createElement('button');button.classList.add('small-button','tour-toggle');bar.appendChild(button);root.before(bar);
-  const progress=$('.tour-progress i',bar),status=$('.tour-state',bar),counter=$('.tour-count',bar);
-  const state={enabled:!reduceMotion,visible:false,hover:false,focus:false,timer:null,remaining:delay,started:0};
-  function stopClock(){
-    if(state.timer!==null){clearTimeout(state.timer);state.timer=null;state.remaining=Math.max(0,state.remaining-(performance.now()-state.started));}
-    progress.style.transition='none';progress.style.transform=`scaleX(${1-state.remaining/delay})`;
+  let timer=null,visible=false;
+  function stop(){clearTimeout(timer);timer=null;}
+  function restart(){
+    stop();
+    root.dataset.playback=visible&&!document.hidden?'playing':'offscreen';
+    $$('[aria-live]',root).forEach(el=>el.setAttribute('aria-live',visible?'off':'polite'));
+    if(!visible||document.hidden)return;
+    timer=setTimeout(()=>{
+      if(!document.querySelector('dialog[open]'))select((getIndex()+1)%count);
+      restart();
+    },delay);
   }
-  function sync(reset=false){
-    stopClock();if(reset)state.remaining=delay;
-    const running=state.enabled&&state.visible&&!document.hidden&&!state.hover&&!state.focus;
-    root.dataset.playback=running?'playing':state.enabled?'waiting':'paused';
-    button.textContent=state.enabled?'暂停轮播 Ⅱ':'自动轮播 ▷';button.setAttribute('aria-pressed',String(state.enabled));
-    counter.textContent=`${getIndex()+1} / ${count}`;
-    status.textContent=!state.enabled?'手动浏览':state.hover||state.focus?'阅读暂停':state.visible?'自动讲解':'进入视野后播放';
-    $$('[aria-live]',root).forEach(el=>el.setAttribute('aria-live',running?'off':'polite'));
-    progress.style.transform=`scaleX(${1-state.remaining/delay})`;
-    if(running){
-      progress.getBoundingClientRect();progress.style.transition=`transform ${state.remaining}ms linear`;progress.style.transform='scaleX(1)';
-      state.started=performance.now();
-      state.timer=setTimeout(()=>{state.timer=null;state.remaining=delay;select((getIndex()+1)%count);sync(true);},state.remaining);
-    }
-  }
-  const pause=()=>{state.enabled=false;sync(true);};
-  button.addEventListener('click',()=>{state.enabled=!state.enabled;state.hover=false;state.focus=false;sync(true);});
-  [root,...manualRoots].forEach(el=>el.addEventListener('click',pause));
-  root.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'){state.hover=true;sync();}});
-  root.addEventListener('pointerleave',()=>{state.hover=false;sync();});
-  root.addEventListener('focusin',()=>{state.focus=true;sync();});
-  root.addEventListener('focusout',()=>queueMicrotask(()=>{state.focus=root.contains(document.activeElement);sync();}));
-  document.addEventListener('visibilitychange',()=>sync());
-  new IntersectionObserver(entries=>{state.visible=entries[0].isIntersecting&&entries[0].intersectionRatio>=.18;sync();},{threshold:[0,.18],rootMargin:'-80px 0px -45px 0px'}).observe(root);
-  sync();return {pause};
+  // A chosen item stays for a full reading interval, then the slideshow continues.
+  [root,...manualRoots].forEach(el=>el.addEventListener('click',restart));
+  document.addEventListener('visibilitychange',restart);
+  new IntersectionObserver(entries=>{
+    visible=entries[0].isIntersecting&&entries[0].intersectionRatio>=.18;
+    restart();
+  },{threshold:[0,.18],rootMargin:'-80px 0px -45px 0px'}).observe(root);
+  return {stop};
 }
 function selectOption(selector,index,render,key){const options=$$(selector),button=options[index];activate(selector,button);render(button.dataset[key]);}
-tours.system=createTour({root:$('.architecture-layout'),selector:'[data-system]',delay:8000,label:'系统分工',select:i=>selectOption('[data-system]',i,showSystem,'system')});
-tours.map=createTour({root:$('.navigation-layout'),selector:'[data-layer]',delay:6500,label:'导航链路',select:i=>selectOption('[data-layer]',i,showLayer,'layer')});
-tours.ai=createTour({root:$('.ai-layout'),selector:'[data-ai]',manualRoots:[$('.model-tabs')],delay:7500,label:'边缘模型',select:i=>selectOption('[data-ai]',i,showAI,'ai')});
-tours.client=createTour({root:$('.terminals'),count:3,getIndex:()=>clientFrame,delay:9000,label:'双端界面',select:i=>showClient(i===0?'web':'mini',i)});
+tours.system=createTour({root:$('.architecture-layout'),selector:'[data-system]',delay:8000,select:i=>selectOption('[data-system]',i,showSystem,'system')});
+tours.map=createTour({root:$('.navigation-layout'),selector:'[data-layer]',delay:6500,select:i=>selectOption('[data-layer]',i,showLayer,'layer')});
+tours.ai=createTour({root:$('.ai-layout'),selector:'[data-ai]',manualRoots:[$('.model-tabs')],delay:7500,select:i=>selectOption('[data-ai]',i,showAI,'ai')});
+tours.client=createTour({root:$('.terminals'),count:3,getIndex:()=>clientFrame,delay:9000,select:i=>showClient(i===0?'web':'mini',i)});
 const scenarioKeys=Object.keys(scenarios);
-tours.task=createTour({root:$('.task-layout'),count:18,getIndex:()=>scenarioKeys.indexOf(scenario)*6+step,delay:4500,label:'任务流程',button:$('#task-play'),manualRoots:[$('.scenario-buttons')],select:i=>{scenario=scenarioKeys[Math.floor(i/6)];activate('[data-scenario]',$(`[data-scenario="${scenario}"]`));showStep(i%6);}});
-motionQuery.addEventListener('change',e=>{if(e.matches)Object.values(tours).forEach(t=>t.pause());});
-window.addEventListener('pagehide',()=>Object.values(tours).forEach(t=>t.pause()));
+tours.task=createTour({root:$('.task-layout'),count:18,getIndex:()=>scenarioKeys.indexOf(scenario)*6+step,delay:4500,manualRoots:[$('.scenario-buttons')],select:i=>{scenario=scenarioKeys[Math.floor(i/6)];activate('[data-scenario]',$(`[data-scenario="${scenario}"]`));showStep(i%6);}});
+window.addEventListener('pagehide',()=>Object.values(tours).forEach(t=>t.stop()));

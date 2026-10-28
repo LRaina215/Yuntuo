@@ -1,0 +1,12 @@
+[submodule "nav-control"]
+	path = components/nav-control
+	url = https://github.com/LRaina215/SOC_FPGA_NAV.git
+	branch = codex/integration-g2-20261022
+[submodule "rk-web"]
+	path = components/rk-web
+	url = https://github.com/LRaina215/QHXD_Web.git
+	branch = yuntuo-fpga
+[submodule "miniprogram"]
+	path = components/miniprogram
+	url = https://github.com/LRaina215/QHXD_Miniprogram.git
+	branch = yuntuo

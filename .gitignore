@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+__pycache__/
+build/
+reports/local/

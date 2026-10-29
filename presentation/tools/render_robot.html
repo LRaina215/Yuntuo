@@ -1,0 +1,74 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:transparent}canvas{display:block}</style>
+<script src="../../showcase/vendor/three.min.js"></script>
+</head><body>
+<script>
+// 由 tools/render_robot.mjs 调用：renderRobot(GLB 的 base64, {w,h,theta,phi,zoom})，渲染透明底整车图。
+// GLB 为 Structure/YunTuo_full_assembly_* 的整车装配：节点矩阵已含装配位置（mm → m），坐标 X 车宽、+Y 车前、+Z 向上。
+// 灯光沿用 showcase/src/app.js。
+function parseGLB(buf){
+  const dv=new DataView(buf), jsonLen=dv.getUint32(12,true);
+  const json=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jsonLen)));
+  const binStart=20+jsonLen+8;
+  const read=(i,Type,comps)=>{
+    const a=json.accessors[i], v=json.bufferViews[a.bufferView];
+    const off=binStart+(v.byteOffset||0)+(a.byteOffset||0), n=a.count*comps;
+    if(v.byteStride&&v.byteStride!==comps*Type.BYTES_PER_ELEMENT) throw new Error('interleaved accessor');
+    return new Type(buf.slice(off,off+n*Type.BYTES_PER_ELEMENT));
+  };
+  return {json,read};
+}
+async function renderRobot(b64, o){
+  const T=THREE;
+  const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)).buffer;
+  const {json,read}=parseGLB(bytes);
+  const renderer=new T.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});
+  renderer.setPixelRatio(1);renderer.setSize(o.w,o.h);
+  renderer.outputEncoding=T.sRGBEncoding;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;
+  renderer.setClearColor(0x000000,0);
+  document.body.appendChild(renderer.domElement);
+  const scene=new T.Scene(), camera=new T.PerspectiveCamera(o.fov||30,o.w/o.h,.005,20);
+  scene.add(new T.HemisphereLight(0xc6f7ff,0x283d51,.8));
+  const key=new T.DirectionalLight(0xe4f8ff,1.7);key.position.set(1,2,1);scene.add(key);
+  const rim=new T.DirectionalLight(0x71dad9,1.1);rim.position.set(-1,.6,-1);scene.add(rim);
+  const fill=new T.DirectionalLight(0xffc79d,.45);fill.position.set(.5,-.2,-1);scene.add(fill);
+  const root=new T.Group();scene.add(root);
+  const mats=json.materials.map(m=>{
+    const f=(m.pbrMetallicRoughness||{}).baseColorFactor||[1,1,1,1];
+    // trimesh 写入的颜色是 sRGB 数值，转成线性后参与光照
+    const color=new T.Color().setRGB(f[0],f[1],f[2]).convertSRGBToLinear();
+    if(m.alphaMode==='BLEND') return new T.MeshStandardMaterial({color,metalness:0,roughness:.08,transparent:true,opacity:Math.max(f[3],.18),depthWrite:false,side:T.DoubleSide});
+    return new T.MeshStandardMaterial({color,metalness:.35,roughness:.48,side:T.DoubleSide});
+  });
+  const axes=new T.Matrix4().makeRotationX(-Math.PI/2);
+  for(const ni of json.scenes[json.scene||0].nodes){
+    const node=json.nodes[ni];
+    if(node.mesh===undefined) continue;
+    const m=axes.clone().multiply(new T.Matrix4().fromArray(node.matrix||[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]));
+    for(const p of json.meshes[node.mesh].primitives){
+      let g=new T.BufferGeometry();
+      g.setAttribute('position',new T.BufferAttribute(read(p.attributes.POSITION,Float32Array,3),3));
+      if(p.indices!==undefined){
+        const ct=json.accessors[p.indices].componentType;
+        g.setIndex(new T.BufferAttribute(read(p.indices,ct===5125?Uint32Array:ct===5123?Uint16Array:Uint8Array,1),1));
+      }
+      // 轮腿连杆和车轮是曲面，用平滑法线；机身和电子设备多为平面，展开顶点后用面法线
+      if(!/_link\//.test(node.name||'')) g=g.toNonIndexed();
+      g.computeVertexNormals();
+      g.applyMatrix4(m);
+      const mesh=new T.Mesh(g,mats[p.material]);
+      if(mats[p.material].transparent) mesh.renderOrder=1;
+      root.add(mesh);
+    }
+  }
+  const box=new T.Box3().setFromObject(root), center=box.getCenter(new T.Vector3()), size=box.getSize(new T.Vector3());
+  root.position.sub(center);
+  const r=size.length()/2/Math.sin(camera.fov*Math.PI/360)*(o.zoom||1);
+  camera.position.set(r*Math.sin(o.phi)*Math.sin(o.theta),r*Math.cos(o.phi),r*Math.sin(o.phi)*Math.cos(o.theta));
+  camera.lookAt(0,0,0);
+  renderer.render(scene,camera);
+  return renderer.domElement.toDataURL('image/png');
+}
+</script>
+</body></html>

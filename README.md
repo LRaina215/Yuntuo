@@ -166,5 +166,6 @@ git clone --branch yuntuo https://github.com/LRaina215/QHXD_Miniprogram.git comp
 | [FPGA 开发指南](https://github.com/LRaina215/SOC_FPGA_NAV/blob/main/docs/3_guide/dev_guide.md) | 导航工程结构、开发环境与验证方法 |
 | [RK3588 部署说明](https://github.com/LRaina215/QHXD_Web/blob/yuntuo-fpga/docs/YUNTUO.md) | 模型服务、任务桥接、接口与板端部署 |
 | [微信小程序说明](https://github.com/LRaina215/QHXD_Miniprogram/blob/yuntuo/README.md) | 页面功能、开发工具配置与运行方式 |
+| [技术方案介绍](presentation/README.md) | 8 页开场介绍 PPT 与页面图片，用于宣讲视频和现场讲解 |
 | [仓库组织](docs/repositories.md) | 代码分工、维护分支与文档入口 |
 | [开发进展](https://github.com/LRaina215/SOC_FPGA_NAV/blob/main/docs/1_plan/system_integration_plan_20261021.md) · [版本与联调记录](docs/baseline.md) | 开发计划、版本记录与专项测试结果 |

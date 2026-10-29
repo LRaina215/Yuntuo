@@ -13,13 +13,14 @@ if chy.exists():
 else:
     chy_html='<span class="chy-wordmark" aria-label="CHY">CHY</span>'
 replacements={
-    '/*__STYLES__*/':'\n'.join((root/'src'/name).read_text(encoding='utf-8') for name in ['styles.css','motion.css','presentation.css']),
+    '/*__STYLES__*/':'\n'.join((root/'src'/name).read_text(encoding='utf-8') for name in ['styles.css','motion.css','presentation.css','lidar.css']),
     '__FPGA_LOGO__':data_url(root/'assets/fpga-competition.jpg','image/jpeg'),
     '__CHY_LOGO__':chy_html,
     '__YUNTUO_LOGO__':data_url(root/'assets/yuntuo-avatar-dark.svg','image/svg+xml'),
     '__MINI_CODE__':data_url(root/'assets/miniprogram-code.png','image/png'),
     '/*__THREE__*/':'/*\n'+(root/'vendor/THREE-LICENSE.txt').read_text(encoding='utf-8')+'\n*/\n'+(root/'vendor/three.min.js').read_text(encoding='utf-8'),
     '/*__MODEL__*/':(root/'assets/robot-model.json').read_text(encoding='utf-8'),
+    '/*__LIDAR__*/':(root/'assets/lidar-model.json').read_text(encoding='utf-8'),
     '/*__SCREENS__*/':json.dumps([
         {'key':'web','title':'Web 控制台','source':'lingxunrobot.cn · 线上界面截图','src':data_url(root/'assets/web-console.png','image/png')},
         {'key':'mini-home','title':'微信小程序 · 总览','source':'微信开发者工具截图','src':data_url(root/'assets/miniprogram-home.jpg','image/jpeg')},

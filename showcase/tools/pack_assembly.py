@@ -12,6 +12,8 @@ layout=json.loads((a.assembly/'assembly_layout.json').read_text(encoding='utf-8'
 groups={}
 for part in geometry:
  key='FPGA_acrylic' if part['group']=='FPGA_with_acrylic' and part['opacity']<1 else part['group']
+ # In the source car export the radar cases/connector were merged into base.
+ if part['name'] in ['front_sensor_58','front_sensor_59','front_sensor_60']:key='XT_M60'
  groups.setdefault(key,[]).append(part)
 if layout['placements']['FPGA_with_acrylic']['model']!='ACX750_with_acrylic':raise ValueError('Expected FPGA with acrylic')
 if layout['placements']['Astra_Pro_Plus']['model']!='Astra_Pro_Plus_head_only':raise ValueError('Expected camera without stand')
@@ -28,6 +30,6 @@ for name,items in groups.items():
  group='FPGA_with_acrylic' if name=='FPGA_acrylic' else name
  parts.append({'name':name,'component':group,'vertices':len(v),'triangles':len(faces),'min':lo.tolist(),'size':extent.tolist(),'vertexColors':True,'opacity':.2 if name=='FPGA_acrylic' else 1,'data':base64.b64encode(gzip.compress(raw,9,mtime=0)).decode(),'parent':None,'origin':[0,0,0],'rpy':[0,0,0],'sourceBodies':len(items)})
  print(name,len(faces),'triangles',len(items),'source bodies')
-data={'name':'YunTuo full assembly','source':'Structure/fpga-main/fpga-main/car/urdf/all1.urdf','assembly':'Structure/YunTuo_full_assembly_20261029','format':'uint16 xyz + uint32 triangle indices + uint8 sRGB vertex colors; gzip/base64','componentCount':11,'jointCount':10,'equipment':{'fpga':'ACX750_with_acrylic','rk':'RK3588_Qichuan_G6_preview','camera':'Astra_Pro_Plus_head_only','cameraHasBase':False},'parts':parts}
+data={'name':'YunTuo full assembly','source':'Structure/fpga-main/fpga-main/car/urdf/all1.urdf','assembly':'Structure/YunTuo_full_assembly_20261029','format':'uint16 xyz + uint32 triangle indices + uint8 sRGB vertex colors; gzip/base64','componentCount':len(set(p['component'] for p in parts)),'jointCount':10,'equipment':{'fpga':'ACX750_with_acrylic','rk':'RK3588_Qichuan_G6_preview','camera':'Astra_Pro_Plus_head_only','cameraHasBase':False,'lidar':'XT-M60'},'parts':parts}
 a.output.write_text(json.dumps(data,separators=(',',':')),encoding='utf-8')
 print('Wrote',a.output,a.output.stat().st_size,'bytes')

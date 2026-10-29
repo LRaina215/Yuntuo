@@ -66,11 +66,13 @@ function activate(selector, el) { $$(selector).forEach(b => { const yes = b===el
     const grid=new T.GridHelper(1.4,28,0x38616b,0x203d49);grid.position.y=bottom;grid.material.transparent=true;grid.material.opacity=.28;scene.add(grid);
     const floor=new T.Mesh(new T.CircleGeometry(.63,80),new T.MeshBasicMaterial({color:0x152d39,transparent:true,opacity:.36,depthWrite:false}));floor.rotation.x=-Math.PI/2;floor.position.y=bottom-.001;scene.add(floor);
     const ring=new T.Mesh(new T.RingGeometry(.25,.2508,96),new T.MeshBasicMaterial({color:0x4c8a95,side:T.DoubleSide,transparent:true,opacity:.45}));ring.rotation.x=-Math.PI/2;ring.position.y=bottom+.0001;scene.add(ring);
-    const dirs={base:[0,.02,0],LeftBack_link:[-.10,.02,.09],LeftFront_link:[-.10,.02,-.09],LeftWheel_link:[-.22,-.015,-.07],RightBack_link:[.10,.02,.09],RightFront_link:[.10,.02,-.09],RightWheel_link:[.22,-.015,-.07],RK3588:[0,.13,.025],FPGA_with_acrylic:[0,.28,.025],FPGA_acrylic:[0,.28,.025],Astra_Pro_Plus:[0,.09,-.14],camera_adapter:[0,.055,-.12]};
+    const dirs={base:[0,.02,0],LeftBack_link:[-.10,.02,.09],LeftFront_link:[-.10,.02,-.09],LeftWheel_link:[-.22,-.015,-.07],RightBack_link:[.10,.02,.09],RightFront_link:[.10,.02,-.09],RightWheel_link:[.22,-.015,-.07],RK3588:[0,.13,.025],FPGA_with_acrylic:[0,.28,.025],FPGA_acrylic:[0,.28,.025],Astra_Pro_Plus:[0,.09,-.14],camera_adapter:[0,.055,-.12],XT_M60:[0,.035,-.22]};
     const names={base:'机身总成',LeftBack_link:'左后连杆',LeftFront_link:'左前连杆',LeftWheel_link:'左轮总成',RightBack_link:'右后连杆',RightFront_link:'右前连杆',RightWheel_link:'右轮总成',RK3588:'RK3588 计算盒',FPGA_with_acrylic:'FPGA 与亚克力保护板',Astra_Pro_Plus:'Astra Pro Plus 相机本体',camera_adapter:'相机安装托架'};
     const descriptions={base:'机舱承载上层 FPGA 与下层 RK3588，前上方安装深度相机，两侧连接轮腿机构。',LeftBack_link:'左侧后连杆，与前连杆共同组成腿部机构。',RightBack_link:'右侧后连杆，与前连杆共同组成腿部机构。',LeftFront_link:'左侧前连杆，连接腿部驱动与左轮总成。',RightFront_link:'右侧前连杆，连接腿部驱动与右轮总成。',LeftWheel_link:'左轮总成，轮速与右轮共同参与平衡、移动和转向。',RightWheel_link:'右轮总成，编码器反馈进入轮速闭环与里程计。',camera_adapter:'两侧支撑的相机托板，跨过原前置传感器，用于安装布置展示。'};
-    const groups={all:meshes.map(m=>m.name),base:['base'],left:['LeftBack_link','LeftFront_link'],right:['RightBack_link','RightFront_link'],wheels:['LeftWheel_link','RightWheel_link'],fpga:['FPGA_with_acrylic','FPGA_acrylic'],rk:['RK3588'],camera:['Astra_Pro_Plus','camera_adapter']};
+    const groups={all:meshes.map(m=>m.name),base:['base'],left:['LeftBack_link','LeftFront_link'],right:['RightBack_link','RightFront_link'],wheels:['LeftWheel_link','RightWheel_link'],fpga:['FPGA_with_acrylic','FPGA_acrylic'],rk:['RK3588'],camera:['Astra_Pro_Plus','camera_adapter'],radar:['XT_M60']};
     const groupCopy={all:['上下分层，感知前置。','上层 FPGA 带亚克力保护板，下层 RK3588；无底座深度相机位于前上方。拖动旋转或拆解查看。'],base:['机身总成',descriptions.base],left:['左侧腿部机构','前后连杆配合腿部驱动，实现轮腿构型与机体高度调节。'],right:['右侧腿部机构','与左侧构成双侧轮腿机构，四路舵机接受策略与逆运动学目标。'],wheels:['双轮驱动总成','两侧驱动轮结合 IMU 与编码器反馈，完成平衡、前进与转向。'],fpga:['上层 · FPGA 与亚克力保护板','ACX750 接口细化板保留双 SFP、网口、HDMI 与排针，上下亚克力板和支柱共同组成上层保护结构。'],rk:['下层 · RK3588 计算盒','带散热片的 G6 计算盒布置在 FPGA 下方，在车端运行视觉、语音和语言理解服务。'],camera:['前上方 · Astra Pro Plus','采用无底座相机本体，镜头朝前；RGB 与深度图像进入 RK3588，提供目标识别与空间位置。']};
+    groupCopy.all=['上下分层，双路感知。','上层 FPGA 带亚克力板，下层 RK3588；前上方为无底座 RGB-D 相机，前置 XT-M60 为导航提供几何深度。'];
+    groupCopy.radar=['前置 · XT-M60 固态激光雷达','60 线 Flash 雷达经百兆以太网向 FPGA 提供深度帧。点云投影、局部地图与结构匹配连接地形感知、定位和避障。'];
     let theta=2.38,phi=1.06,zoom=1,explode=0,auto=false,wire=false,selected='all',dirty=true,drag=null,frame=0,visible=true;
     const pose={theta,phi,zoom:reduceMotion?1:1.08,explode:0};let lastTime=performance.now();
     const baseRadius=Math.max(size.x,size.y,size.z)*2.15;
@@ -105,7 +107,7 @@ function activate(selector, el) { $$(selector).forEach(b => { const yes = b===el
     const c=renderer.domElement;let pointers=new Map(), pinchDistance=0;
     c.addEventListener('pointerdown',e=>{pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});c.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false};auto=false;$('#rotate-button').setAttribute('aria-pressed','false');$('#rotate-button').classList.remove('active');if(pointers.size===2){const a=[...pointers.values()];pinchDistance=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);}});
     c.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId)||!drag)return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===2){const a=[...pointers.values()],d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);zoom=Math.max(.55,Math.min(2.4,zoom*pinchDistance/Math.max(d,1)));pinchDistance=d;drag.moved=true;}else{const dx=e.clientX-drag.x,dy=e.clientY-drag.y;theta-=dx*.008;phi=Math.max(.06,Math.min(Math.PI*.88,phi+dy*.008));drag.moved||=Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>4;drag.x=e.clientX;drag.y=e.clientY;}dirty=true;});
-    c.addEventListener('pointerup',e=>{if(drag&&!drag.moved&&pointers.size===1){const rect=c.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(meshes).find(h=>h.object.material.opacity>.5);if(hit){const part=hit.object.name;setSelection(['FPGA_with_acrylic','FPGA_acrylic'].includes(part)?'fpga':part==='RK3588'?'rk':part==='Astra_Pro_Plus'?'camera':part);}}pointers.delete(e.pointerId);drag=null;});
+    c.addEventListener('pointerup',e=>{if(drag&&!drag.moved&&pointers.size===1){const rect=c.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(meshes).find(h=>h.object.material.opacity>.5);if(hit){const part=hit.object.name;setSelection(['FPGA_with_acrylic','FPGA_acrylic'].includes(part)?'fpga':part==='RK3588'?'rk':part==='Astra_Pro_Plus'?'camera':part==='XT_M60'?'radar':part);}}pointers.delete(e.pointerId);drag=null;});
     c.addEventListener('pointercancel',()=>{pointers.clear();drag=null;});
     c.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.55,Math.min(2.4,zoom*Math.exp(e.deltaY*.001)));dirty=true;},{passive:false});
     stage.addEventListener('keydown',e=>{const keys=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','-'];if(!keys.includes(e.key))return;e.preventDefault();if(e.key==='ArrowLeft')theta+=.12;if(e.key==='ArrowRight')theta-=.12;if(e.key==='ArrowUp')phi=Math.max(.06,phi-.1);if(e.key==='ArrowDown')phi=Math.min(Math.PI*.88,phi+.1);if(e.key==='+')zoom=Math.max(.55,zoom-.1);if(e.key==='-')zoom=Math.min(2.4,zoom+.1);dirty=true;});
@@ -117,6 +119,30 @@ function activate(selector, el) { $$(selector).forEach(b => { const yes = b===el
     $('#model-reset').addEventListener('click',()=>{theta=2.38;phi=1.06;zoom=1;explode=0;auto=false;wire=false;meshes.forEach(m=>m.material.wireframe=false);$('#explode').value=0;$('#explode-value').textContent='0%';['#rotate-button','#wire-button'].forEach(id=>{$(id).classList.remove('active');$(id).setAttribute('aria-pressed','false');});activate('[data-view]',$('[data-view="iso"]'));setSelection('all');dirty=true;});
     window.addEventListener('pagehide',()=>{cancelAnimationFrame(frame);renderer.dispose();});
   } catch(e){loading.innerHTML='<span>三维视图未能启动。请使用支持 WebGL 和 gzip 解压的新版 Edge / Chrome。</span>';console.error('Robot viewer:',e);}
+})();
+
+// Original supplier STEP, shown independently from the car's installed radar.
+(async function initLidar(){
+  const stage=$('#lidar-stage');let frame=0;
+  try{
+    const data=JSON.parse($('#lidar-data').textContent),T=THREE;
+    const raw=Uint8Array.from(atob(data.data),c=>c.charCodeAt(0));
+    const parts=JSON.parse(await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('gzip'))).text());
+    const renderer=new T.WebGLRenderer({antialias:true,alpha:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.outputEncoding=T.sRGBEncoding;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;stage.append(renderer.domElement);
+    const scene=new T.Scene(),camera=new T.PerspectiveCamera(34,1,.001,3),root=new T.Group();scene.add(root);
+    scene.add(new T.HemisphereLight(0xe0ffff,0x334954,1.2));const light=new T.DirectionalLight(0xffffff,2);light.position.set(.2,.3,.4);scene.add(light);const rim=new T.DirectionalLight(0x72e7df,1);rim.position.set(-.2,.1,-.2);scene.add(rim);
+    parts.forEach(p=>{const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p.vertices.flat(),3));g.setIndex(p.triangles.flat());g.computeVertexNormals();root.add(new T.Mesh(g,new T.MeshStandardMaterial({color:new T.Color(...p.color).convertSRGBToLinear(),metalness:.35,roughness:.44,side:T.DoubleSide})))});
+    const box=new T.Box3().setFromObject(root),center=box.getCenter(new T.Vector3());root.position.copy(center).multiplyScalar(-1);
+    let theta=.55,phi=1.22,distance=.19,drag=null,visible=false,dirty=true;
+    function draw(){frame=requestAnimationFrame(draw);if(!visible||document.hidden||!dirty)return;camera.position.set(distance*Math.sin(phi)*Math.sin(theta),distance*Math.cos(phi),distance*Math.sin(phi)*Math.cos(theta));camera.lookAt(0,0,0);renderer.render(scene,camera);dirty=false;}
+    new ResizeObserver(()=>{renderer.setSize(stage.clientWidth,stage.clientHeight);camera.aspect=stage.clientWidth/stage.clientHeight;camera.updateProjectionMatrix();dirty=true}).observe(stage);
+    new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)dirty=true}).observe(stage);
+    const c=renderer.domElement;c.addEventListener('pointerdown',e=>{drag=[e.clientX,e.clientY];c.setPointerCapture(e.pointerId)});c.addEventListener('pointermove',e=>{if(!drag)return;theta-=(e.clientX-drag[0])*.01;phi=Math.max(.1,Math.min(3,phi+(e.clientY-drag[1])*.01));drag=[e.clientX,e.clientY];dirty=true});c.addEventListener('pointerup',()=>drag=null);c.addEventListener('pointercancel',()=>drag=null);
+    c.addEventListener('wheel',e=>{e.preventDefault();distance=Math.max(.1,Math.min(.35,distance*Math.exp(e.deltaY*.001)));dirty=true},{passive:false});
+    stage.addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();if(e.key==='ArrowLeft')theta+=.15;if(e.key==='ArrowRight')theta-=.15;if(e.key==='ArrowUp')phi=Math.max(.1,phi-.12);if(e.key==='ArrowDown')phi=Math.min(3,phi+.12);dirty=true});
+    draw();stage.dataset.ready='true';stage.dataset.bodies=String(data.bodies);$('#lidar-loading').hidden=true;
+    window.addEventListener('pagehide',()=>{cancelAnimationFrame(frame);renderer.dispose()});
+  }catch(e){$('#lidar-loading').textContent='请使用支持 WebGL 的新版 Edge / Chrome 查看模型。';console.error('Lidar viewer:',e)}
 })();
 
 const systems={
@@ -222,7 +248,7 @@ miniDialog.addEventListener('click',e=>{if(e.target===miniDialog){const r=miniDi
 
 // Reveal once, close to the viewport; ambient illustrations pause off-screen.
 const revealObserver=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('is-visible');revealObserver.unobserve(entry.target);}});},{threshold:.06,rootMargin:'0px 0px -20px 0px'});
-$$('.hero-copy > *, .model-panel, .section-heading, .architecture-layout, .control-band, .navigation-layout, .nav-chain, .model-tabs, .ai-layout, .deployment-row, .scenario-buttons, .task-layout, .terminals, .access-panel, .repo-grid > a, .document-links').forEach(el=>{el.classList.add('reveal');if(reduceMotion)el.classList.add('is-visible');else revealObserver.observe(el);});
+$$('.hero-copy > *, .model-panel, .section-heading, .architecture-layout, .control-band, .lidar-feature, .navigation-layout, .nav-chain, .model-tabs, .ai-layout, .deployment-row, .scenario-buttons, .task-layout, .terminals, .access-panel, .repo-grid > a, .document-links').forEach(el=>{el.classList.add('reveal');if(reduceMotion)el.classList.add('is-visible');else revealObserver.observe(el);});
 $$('.hero-copy > *').forEach((el,i)=>el.style.setProperty('--reveal-delay',`${i*55}ms`));
 const ambientObserver=new IntersectionObserver(entries=>entries.forEach(entry=>entry.target.classList.toggle('motion-live',entry.isIntersecting)),{threshold:.1});
 $$('.system-map,.ai-visual').forEach(el=>ambientObserver.observe(el));

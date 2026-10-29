@@ -509,12 +509,13 @@ h1 {
 
 .part-selector {
   display:flex;
+  flex-wrap:wrap;
   gap:7px;
   margin-top:16px
 }
 
 .part-selector button {
-  flex:1;
+  flex:1 0 52px;
   padding:4px 0;
   font-size:11px
 }

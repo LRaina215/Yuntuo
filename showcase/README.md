@@ -13,20 +13,20 @@
 
 | 区域 | 操作与内容 |
 |---|---|
-| 车体结构 | 拖动旋转、滚轮或双指缩放、切换视角、拆解滑块、部件选择、线框与自动旋转 |
+| 车体结构 | 拖动旋转、滚轮或双指缩放、切换视角、拆解滑块，分别查看 FPGA、RK3588、RGB-D 相机、车架和轮腿 |
 | 系统架构 | 点击交互端、云端、RK3588 或 FPGA，查看职责与数据流 |
 | 导航地图 | 切换高程、原始地形、膨胀和路径；在路径层点击空地重设示意目标 |
 | 边缘智能 | 切换视觉、语言、语音与视频服务，查看模型部署和输入输出 |
 | 任务流程 | 选择找物、巡检或跟随，逐步查看或自动播放流程 |
 | 双端应用 | 查看线上 Web 与微信开发者工具的实际界面截图，放大原图并打开应用入口 |
 
-架构、地图、模型、任务流程和双端截图在进入视野后自动轮播。点击选项可直接查看内容，停留一个完整阅读周期后继续自动切换。离开视野或切换到其他浏览器标签时暂停计时，返回后继续播放。
+架构、地图、模型、任务流程和双端截图在进入视野后自动轮播，每 **2.5 秒**切换一次。点击选项可直接查看内容，再停留 2.5 秒后继续自动切换。离开视野或切换到其他浏览器标签时暂停计时，返回后继续播放。
 
 页面通过滚动入场、内容切换、视角与拆解缓动展示结构关系，配合轻量的流程光点和视觉扫描。系统开启“减少动态效果”时，关闭装饰和切换动效，内容仍按节奏自动切换。
 
 模型区域支持方向键旋转、`+` / `-` 缩放；路径图支持方向键微调目标；小程序码弹窗可按 Escape 关闭。其余控件支持键盘聚焦与操作。
 
-车体来自项目 `Structure/car/car/urdf/car.urdf` 和配套 STL，保留 7 个 link、6 个 joint 的装配关系。结构拆解用于展示部件组成。地图与任务采用示意场景说明设计；双端展示使用实际界面截图。页面不连接机器人控制接口。
+车架与轮腿来自项目 `Structure/fpga-main/fpga-main/car/urdf/all1.urdf`，三维区域使用整车装配的 11 个组件：上层 ACX750 FPGA 带亚克力保护板，下层为 RK3588 计算盒，前上方为无底座 Astra Pro Plus，相机安装托架为布置示意件。结构拆解展示这些组件的空间关系，保留器件颜色和亚克力透明效果。地图与任务采用示意场景说明设计；双端展示使用实际界面截图。页面不连接机器人控制接口。
 
 ## 页面源码
 
@@ -40,7 +40,7 @@ showcase/
 │   ├── presentation.css       # 自动轮播与截图展示
 │   └── app.js                 # 三维模型与页面交互
 ├── assets/
-│   ├── robot-model.json       # 压缩后的 URDF 网格与装配信息
+│   ├── robot-model.json       # 压缩后的整车网格、器件颜色与透明材质
 │   ├── fpga-competition.jpg   # FPGA 创新设计竞赛标志
 │   ├── chy-logo.png           # CHY 透明底单色标志
 │   ├── chy-reference.png      # CHY 原始设计参考
@@ -54,7 +54,8 @@ showcase/
 ├── vendor/                    # Three.js r149 与 MIT 许可
 └── tools/
     ├── build.py               # 生成单文件 HTML
-    └── pack_urdf.py           # 从 URDF / STL 更新模型
+    ├── pack_assembly.py       # 从整车装配导出更新模型
+    └── pack_urdf.py           # 从基础 URDF / STL 更新模型
 ```
 
 修改 `src/` 后，在总仓库根目录运行：
@@ -66,11 +67,11 @@ python showcase/tools/build.py
 构建只使用 Python 标准库。模型更新工具另需 NumPy：
 
 ```bash
-python showcase/tools/pack_urdf.py --urdf /path/to/car/urdf/car.urdf
+python showcase/tools/pack_assembly.py --assembly /path/to/YunTuo_full_assembly_20261029
 python showcase/tools/build.py
 ```
 
-模型工具对顶点采用每轴 16 位量化、共享顶点索引和 gzip 压缩，保留原始三角面。页面使用浏览器 `DecompressionStream` 解码，再由 Three.js 渲染。部件材质用于区分结构。
+模型工具读取整车装配的 `assembly_layout.json` 与 `preview/geometry.json.gz`，对顶点采用每轴 16 位量化、索引和 gzip 压缩，保留三角面与逐顶点颜色。透明亚克力单独渲染，设备作为独立组件参与选择与拆解。页面使用浏览器 `DecompressionStream` 解码，再由 Three.js 渲染。`pack_urdf.py` 可用于只展示基础 URDF 的页面。
 
 ## 内容与素材
 

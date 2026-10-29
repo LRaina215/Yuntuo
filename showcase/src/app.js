@@ -16,7 +16,7 @@ function animateContent(el,slide=true){
 motionQuery.addEventListener('change',e=>{reduceMotion=e.matches;if(reduceMotion){contentAnimations.forEach(a=>a.cancel());contentAnimations.clear();$$('.reveal').forEach(el=>el.classList.add('is-visible'));}});
 function activate(selector, el) { $$(selector).forEach(b => { const yes = b===el; b.classList.toggle('active',yes); b.setAttribute('aria-pressed',String(yes)); }); }
 
-// Portable CAD viewer. The embedded model contains the supplied URDF hierarchy.
+// Offline assembly viewer; hardware geometry, color and acrylic opacity are embedded.
 (async function initRobot(){
   const stage=$('#model-stage'), loading=$('#model-loading');
   try {
@@ -46,13 +46,19 @@ function activate(selector, el) { $$(selector).forEach(b => { const yes = b===el
       const q=new Uint16Array(buf,0,part.vertices*3), positions=new Float32Array(q.length);
       for(let i=0;i<q.length;i++) positions[i]=part.min[i%3]+q[i]/65535*part.size[i%3];
       // uint32 index bytes may follow an odd count of uint16 vertices: copy to align.
-      const indices=new Uint32Array(buf.slice(q.byteLength));
+      const indexBytes=part.triangles*3*4;
+      const indices=new Uint32Array(buf.slice(q.byteLength,q.byteLength+indexBytes));
       const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(positions,3));g.setIndex(new T.BufferAttribute(indices,1));g.computeVertexNormals();
+      if(part.vertexColors){
+        const rgb=new Uint8Array(buf,q.byteLength+indexBytes),colors=new Float32Array(rgb.length);
+        for(let i=0;i<rgb.length;i++){const s=rgb[i]/255;colors[i]=s<=.04045?s/12.92:Math.pow((s+.055)/1.055,2.4);}
+        g.setAttribute('color',new T.BufferAttribute(colors,3));
+      }
       g.applyMatrix4(axes.clone().multiply(worldMatrix(part)));
       const isWheel=part.name.includes('Wheel'), isBase=part.name==='base';
-      const color=isBase?0x536e80:isWheel?0x96653f:0x278f97;
-      const mat=new T.MeshStandardMaterial({color,metalness:isWheel?.36:.65,roughness:isBase?.35:.38,side:T.DoubleSide});
-      const mesh=new T.Mesh(g,mat);mesh.name=part.name;mesh.userData={baseColor:new T.Color(color),triangles:part.triangles};root.add(mesh);meshes.push(mesh);
+      const color=part.vertexColors?0xffffff:isBase?0x536e80:isWheel?0x96653f:0x278f97,opacity=part.opacity??1;
+      const mat=new T.MeshStandardMaterial({color,vertexColors:!!part.vertexColors,metalness:opacity<1?.02:isWheel?.15:.38,roughness:opacity<1?.12:.52,side:T.DoubleSide,transparent:opacity<1,opacity,depthWrite:opacity===1});
+      const mesh=new T.Mesh(g,mat);mesh.name=part.name;mesh.userData={baseColor:new T.Color(color),baseOpacity:opacity,component:part.component||part.name,triangles:part.triangles};root.add(mesh);meshes.push(mesh);
     }
     const bounds=new T.Box3().setFromObject(root), center=bounds.getCenter(new T.Vector3()), size=bounds.getSize(new T.Vector3());
     meshes.forEach(m=>m.geometry.translate(-center.x,-center.y,-center.z));
@@ -60,22 +66,23 @@ function activate(selector, el) { $$(selector).forEach(b => { const yes = b===el
     const grid=new T.GridHelper(1.4,28,0x38616b,0x203d49);grid.position.y=bottom;grid.material.transparent=true;grid.material.opacity=.28;scene.add(grid);
     const floor=new T.Mesh(new T.CircleGeometry(.63,80),new T.MeshBasicMaterial({color:0x152d39,transparent:true,opacity:.36,depthWrite:false}));floor.rotation.x=-Math.PI/2;floor.position.y=bottom-.001;scene.add(floor);
     const ring=new T.Mesh(new T.RingGeometry(.25,.2508,96),new T.MeshBasicMaterial({color:0x4c8a95,side:T.DoubleSide,transparent:true,opacity:.45}));ring.rotation.x=-Math.PI/2;ring.position.y=bottom+.0001;scene.add(ring);
-    const dirs={base:[0,.12,0],LeftBack_link:[-.10,.02,.09],LeftFront_link:[-.10,.02,-.09],LeftWheel_link:[-.22,-.015,-.07],RightBack_link:[.10,.02,.09],RightFront_link:[.10,.02,-.09],RightWheel_link:[.22,-.015,-.07]};
-    const names={base:'机身总成',LeftBack_link:'左后连杆',LeftFront_link:'左前连杆',LeftWheel_link:'左轮总成',RightBack_link:'右后连杆',RightFront_link:'右前连杆',RightWheel_link:'右轮总成'};
-    const descriptions={base:'承载车体上层装配，两侧连接四路腿部机构。',LeftBack_link:'左侧后连杆，与前连杆共同组成腿部机构。',RightBack_link:'右侧后连杆，与前连杆共同组成腿部机构。',LeftFront_link:'左侧前连杆，URDF 中左轮关节连接于此。',RightFront_link:'右侧前连杆，URDF 中右轮关节连接于此。',LeftWheel_link:'左轮总成，轮速与右轮共同参与平衡、移动和转向。',RightWheel_link:'右轮总成，编码器反馈进入轮速闭环与里程计。'};
-    const groups={all:meshes.map(m=>m.name),base:['base'],left:['LeftBack_link','LeftFront_link'],right:['RightBack_link','RightFront_link'],wheels:['LeftWheel_link','RightWheel_link']};
-    const groupCopy={all:['两轮 × 四路腿部舵机','拖动旋转 · 滚轮缩放 · 点击部件查看。拆解展示装配关系。'],base:['机身总成','车体主体与上层装配的承载基础，连接左右腿部机构。'],left:['左侧腿部机构','前后连杆配合腿部驱动，实现轮腿构型与机体高度调节。'],right:['右侧腿部机构','与左侧构成双侧轮腿机构，四路舵机接受策略与逆运动学目标。'],wheels:['双轮驱动总成','两侧驱动轮结合 IMU 与编码器反馈，完成平衡、前进与转向。']};
+    const dirs={base:[0,.02,0],LeftBack_link:[-.10,.02,.09],LeftFront_link:[-.10,.02,-.09],LeftWheel_link:[-.22,-.015,-.07],RightBack_link:[.10,.02,.09],RightFront_link:[.10,.02,-.09],RightWheel_link:[.22,-.015,-.07],RK3588:[0,.13,.025],FPGA_with_acrylic:[0,.28,.025],FPGA_acrylic:[0,.28,.025],Astra_Pro_Plus:[0,.09,-.14],camera_adapter:[0,.055,-.12]};
+    const names={base:'机身总成',LeftBack_link:'左后连杆',LeftFront_link:'左前连杆',LeftWheel_link:'左轮总成',RightBack_link:'右后连杆',RightFront_link:'右前连杆',RightWheel_link:'右轮总成',RK3588:'RK3588 计算盒',FPGA_with_acrylic:'FPGA 与亚克力保护板',Astra_Pro_Plus:'Astra Pro Plus 相机本体',camera_adapter:'相机安装托架'};
+    const descriptions={base:'机舱承载上层 FPGA 与下层 RK3588，前上方安装深度相机，两侧连接轮腿机构。',LeftBack_link:'左侧后连杆，与前连杆共同组成腿部机构。',RightBack_link:'右侧后连杆，与前连杆共同组成腿部机构。',LeftFront_link:'左侧前连杆，连接腿部驱动与左轮总成。',RightFront_link:'右侧前连杆，连接腿部驱动与右轮总成。',LeftWheel_link:'左轮总成，轮速与右轮共同参与平衡、移动和转向。',RightWheel_link:'右轮总成，编码器反馈进入轮速闭环与里程计。',camera_adapter:'两侧支撑的相机托板，跨过原前置传感器，用于安装布置展示。'};
+    const groups={all:meshes.map(m=>m.name),base:['base'],left:['LeftBack_link','LeftFront_link'],right:['RightBack_link','RightFront_link'],wheels:['LeftWheel_link','RightWheel_link'],fpga:['FPGA_with_acrylic','FPGA_acrylic'],rk:['RK3588'],camera:['Astra_Pro_Plus','camera_adapter']};
+    const groupCopy={all:['上下分层，感知前置。','上层 FPGA 带亚克力保护板，下层 RK3588；无底座深度相机位于前上方。拖动旋转或拆解查看。'],base:['机身总成',descriptions.base],left:['左侧腿部机构','前后连杆配合腿部驱动，实现轮腿构型与机体高度调节。'],right:['右侧腿部机构','与左侧构成双侧轮腿机构，四路舵机接受策略与逆运动学目标。'],wheels:['双轮驱动总成','两侧驱动轮结合 IMU 与编码器反馈，完成平衡、前进与转向。'],fpga:['上层 · FPGA 与亚克力保护板','ACX750 接口细化板保留双 SFP、网口、HDMI 与排针，上下亚克力板和支柱共同组成上层保护结构。'],rk:['下层 · RK3588 计算盒','带散热片的 G6 计算盒布置在 FPGA 下方，在车端运行视觉、语音和语言理解服务。'],camera:['前上方 · Astra Pro Plus','采用无底座相机本体，镜头朝前；RGB 与深度图像进入 RK3588，提供目标识别与空间位置。']};
     let theta=2.38,phi=1.06,zoom=1,explode=0,auto=false,wire=false,selected='all',dirty=true,drag=null,frame=0,visible=true;
     const pose={theta,phi,zoom:reduceMotion?1:1.08,explode:0};let lastTime=performance.now();
     const baseRadius=Math.max(size.x,size.y,size.z)*2.15;
     const raycaster=new T.Raycaster(), pointer=new T.Vector2();
     function setSelection(value){
       selected=value;const list=groups[value]||[value];
-      meshes.forEach(m=>{const on=list.includes(m.name);m.material.color.copy(m.userData.baseColor);m.material.emissive.set(on&&value!=='all'?0x143c41:0);m.material.transparent=!on;m.material.opacity=on?1:.13;m.material.depthWrite=on;});
+      meshes.forEach(m=>{const on=list.includes(m.name);m.material.color.copy(m.userData.baseColor);m.material.emissive.set(on&&value!=='all'?0x143c41:0);m.material.opacity=m.userData.baseOpacity*(on?1:.13);m.material.transparent=m.material.opacity<1;m.material.depthWrite=m.material.opacity===1;});
       $$('.part-selector button').forEach(b=>{const on=b.dataset.part===value;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
       const copy=groupCopy[value]||[names[value],descriptions[value]];
       $('#part-title').textContent=copy[0];$('#part-description').textContent=copy[1];
-      $('#part-count').innerHTML=value==='all'?'7 LINKS<br>6 JOINTS':`${list.length} ${list.length===1?'LINK':'LINKS'}<br>URDF / CAD`;
+      const count=new Set(meshes.filter(m=>list.includes(m.name)).map(m=>m.userData.component)).size;
+      $('#part-count').innerHTML=value==='all'?`${data.componentCount||7} 组件<br>整车装配`:`${count} 组件<br>URDF / CAD`;
       $('#part-marker').hidden=!!groups[value];$('#part-marker').textContent=names[value]||'';dirty=true;
     }
     function updateCamera(){
@@ -90,15 +97,15 @@ function activate(selector, el) { $$(selector).forEach(b => { const yes = b===el
       const targets={theta,phi,zoom,explode},blend=reduceMotion||drag?1:1-Math.exp(-dt/105);
       for(const key of Object.keys(pose)){const distance=targets[key]-pose[key];if(Math.abs(distance)>.0001){pose[key]+=distance*blend;dirty=true;}else pose[key]=targets[key];}
       if(!dirty)return;
-      meshes.forEach(m=>m.position.set(...dirs[m.name]).multiplyScalar(pose.explode));updateCamera();
+      meshes.forEach(m=>m.position.set(...(dirs[m.name]||[0,0,0])).multiplyScalar(pose.explode));updateCamera();
       if(!groups[selected]){const m=meshes.find(x=>x.name===selected);const pt=new T.Box3().setFromObject(m).getCenter(new T.Vector3());pt.y+=.04;pt.project(camera);const label=$('#part-marker');label.style.left=`${(pt.x*.5+.5)*stage.clientWidth}px`;label.style.top=`${(-pt.y*.5+.5)*stage.clientHeight}px`;}
       renderer.render(scene,camera);dirty=false;
     }
-    draw();loading.hidden=true;stage.dataset.ready='true';
+    draw();setSelection('all');loading.hidden=true;stage.dataset.ready='true';stage.dataset.components=String(data.componentCount||7);stage.dataset.cameraBase=String(data.equipment?.cameraHasBase??true);
     const c=renderer.domElement;let pointers=new Map(), pinchDistance=0;
     c.addEventListener('pointerdown',e=>{pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});c.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false};auto=false;$('#rotate-button').setAttribute('aria-pressed','false');$('#rotate-button').classList.remove('active');if(pointers.size===2){const a=[...pointers.values()];pinchDistance=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);}});
     c.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId)||!drag)return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===2){const a=[...pointers.values()],d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);zoom=Math.max(.55,Math.min(2.4,zoom*pinchDistance/Math.max(d,1)));pinchDistance=d;drag.moved=true;}else{const dx=e.clientX-drag.x,dy=e.clientY-drag.y;theta-=dx*.008;phi=Math.max(.06,Math.min(Math.PI*.88,phi+dy*.008));drag.moved||=Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>4;drag.x=e.clientX;drag.y=e.clientY;}dirty=true;});
-    c.addEventListener('pointerup',e=>{if(drag&&!drag.moved&&pointers.size===1){const rect=c.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(meshes).find(h=>h.object.material.opacity>.5);if(hit)setSelection(hit.object.name);}pointers.delete(e.pointerId);drag=null;});
+    c.addEventListener('pointerup',e=>{if(drag&&!drag.moved&&pointers.size===1){const rect=c.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(meshes).find(h=>h.object.material.opacity>.5);if(hit){const part=hit.object.name;setSelection(['FPGA_with_acrylic','FPGA_acrylic'].includes(part)?'fpga':part==='RK3588'?'rk':part==='Astra_Pro_Plus'?'camera':part);}}pointers.delete(e.pointerId);drag=null;});
     c.addEventListener('pointercancel',()=>{pointers.clear();drag=null;});
     c.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.55,Math.min(2.4,zoom*Math.exp(e.deltaY*.001)));dirty=true;},{passive:false});
     stage.addEventListener('keydown',e=>{const keys=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','-'];if(!keys.includes(e.key))return;e.preventDefault();if(e.key==='ArrowLeft')theta+=.12;if(e.key==='ArrowRight')theta-=.12;if(e.key==='ArrowUp')phi=Math.max(.06,phi-.1);if(e.key==='ArrowDown')phi=Math.min(Math.PI*.88,phi+.1);if(e.key==='+')zoom=Math.max(.55,zoom-.1);if(e.key==='-')zoom=Math.min(2.4,zoom+.1);dirty=true;});
@@ -222,7 +229,7 @@ $$('.system-map,.ai-visual').forEach(el=>ambientObserver.observe(el));
 document.documentElement.classList.add('motion-ready');
 
 // Automatic presentation, without extra playback controls or manual modes.
-function createTour({root,selector,delay=7000,count,getIndex,select,manualRoots=[]}){
+function createTour({root,selector,delay=2500,count,getIndex,select,manualRoots=[]}){
   const options=selector?$$(selector):null;
   count??=options.length;
   getIndex??=()=>Math.max(0,options.findIndex(b=>b.classList.contains('active')));
@@ -248,10 +255,10 @@ function createTour({root,selector,delay=7000,count,getIndex,select,manualRoots=
   return {stop};
 }
 function selectOption(selector,index,render,key){const options=$$(selector),button=options[index];activate(selector,button);render(button.dataset[key]);}
-tours.system=createTour({root:$('.architecture-layout'),selector:'[data-system]',delay:8000,select:i=>selectOption('[data-system]',i,showSystem,'system')});
-tours.map=createTour({root:$('.navigation-layout'),selector:'[data-layer]',delay:6500,select:i=>selectOption('[data-layer]',i,showLayer,'layer')});
-tours.ai=createTour({root:$('.ai-layout'),selector:'[data-ai]',manualRoots:[$('.model-tabs')],delay:7500,select:i=>selectOption('[data-ai]',i,showAI,'ai')});
-tours.client=createTour({root:$('.terminals'),count:3,getIndex:()=>clientFrame,delay:9000,select:i=>showClient(i===0?'web':'mini',i)});
+tours.system=createTour({root:$('.architecture-layout'),selector:'[data-system]',select:i=>selectOption('[data-system]',i,showSystem,'system')});
+tours.map=createTour({root:$('.navigation-layout'),selector:'[data-layer]',select:i=>selectOption('[data-layer]',i,showLayer,'layer')});
+tours.ai=createTour({root:$('.ai-layout'),selector:'[data-ai]',manualRoots:[$('.model-tabs')],select:i=>selectOption('[data-ai]',i,showAI,'ai')});
+tours.client=createTour({root:$('.terminals'),count:3,getIndex:()=>clientFrame,select:i=>showClient(i===0?'web':'mini',i)});
 const scenarioKeys=Object.keys(scenarios);
-tours.task=createTour({root:$('.task-layout'),count:18,getIndex:()=>scenarioKeys.indexOf(scenario)*6+step,delay:4500,manualRoots:[$('.scenario-buttons')],select:i=>{scenario=scenarioKeys[Math.floor(i/6)];activate('[data-scenario]',$(`[data-scenario="${scenario}"]`));showStep(i%6);}});
+tours.task=createTour({root:$('.task-layout'),count:18,getIndex:()=>scenarioKeys.indexOf(scenario)*6+step,manualRoots:[$('.scenario-buttons')],select:i=>{scenario=scenarioKeys[Math.floor(i/6)];activate('[data-scenario]',$(`[data-scenario="${scenario}"]`));showStep(i%6);}});
 window.addEventListener('pagehide',()=>Object.values(tours).forEach(t=>t.stop()));

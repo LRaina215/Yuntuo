@@ -13,7 +13,7 @@
 
 | 区域 | 操作与内容 |
 |---|---|
-| 车体结构 | 拖动旋转、滚轮或双指缩放、切换视角、拆解滑块，分别查看 FPGA、RK3588、XT-M60、RGB-D 相机、车架和轮腿 |
+| 车体结构 | 拖动旋转、滚轮或双指缩放、切换视角、拆解滑块，分别查看 FPGA、RK3588、XT-M60、RGB-D、SG90 超声波云台、OV5640、触摸屏、车架和轮腿 |
 | 系统架构 | 点击交互端、云端、RK3588 或 FPGA，查看职责与数据流 |
 | 导航地图 | 切换高程、原始地形、膨胀和路径；在路径层点击空地重设示意目标 |
 | XT-M60 雷达 | 旋转查看原厂三维模型，了解深度阵列、接收/发射视场及雷达到 FPGA 导航的数据链路 |
@@ -27,7 +27,7 @@
 
 模型区域支持方向键旋转、`+` / `-` 缩放；路径图支持方向键微调目标；小程序码弹窗可按 Escape 关闭。其余控件支持键盘聚焦与操作。
 
-车架与轮腿来自项目 `Structure/fpga-main/fpga-main/car/urdf/all1.urdf`。整车视图将前置 XT-M60 从机身中独立出来，共有 12 个可查看组件：上层 ACX750 FPGA 带亚克力保护板，下层为 RK3588 计算盒，前上方为无底座 Astra Pro Plus，相机安装托架为布置示意件。结构拆解保留器件颜色和亚克力透明效果。独立雷达视图采用原厂 STEP 的 15 个 CAD 实体，技术参数和来源见 [雷达与视觉感知](hardware.md)。地图与任务采用示意场景说明设计；双端展示使用实际界面截图。页面不连接机器人控制接口。
+车架与轮腿来自项目 `Structure/fpga-main/fpga-main/car/urdf/all1.urdf`。整车视图将前置 XT-M60 从机身中独立出来，共有 17 个可查看组件：上层 ACX750 FPGA 带亚克力保护板，下层为 RK3588 计算盒，前上方为无底座 Astra Pro Plus，相机顶面中央安装 SG90 与 YB-MVU04，侧边为 OV5640；5 寸电容触摸屏叠放于 FPGA 亚克力板上。胶垫、转接片和安装托架为布置示意件。结构拆解保留器件颜色和亚克力透明效果。独立雷达视图采用原厂 STEP 的 15 个 CAD 实体，技术参数和来源见 [雷达与视觉感知](hardware.md)。地图与任务采用示意场景说明设计；双端展示使用实际界面截图。页面不连接机器人控制接口。
 
 ## 页面源码
 
@@ -71,7 +71,7 @@ python showcase/tools/build.py
 构建只使用 Python 标准库。模型更新工具另需 NumPy：
 
 ```bash
-python showcase/tools/pack_assembly.py --assembly /path/to/YunTuo_full_assembly_20261029
+python showcase/tools/pack_assembly.py --assembly /path/to/YunTuo_full_assembly_20261030
 python showcase/tools/build.py
 ```
 

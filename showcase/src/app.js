@@ -73,6 +73,11 @@ function activate(selector, el) { $$(selector).forEach(b => { const yes = b===el
     const groupCopy={all:['上下分层，感知前置。','上层 FPGA 带亚克力保护板，下层 RK3588；无底座深度相机位于前上方。拖动旋转或拆解查看。'],base:['机身总成',descriptions.base],left:['左侧腿部机构','前后连杆配合腿部驱动，实现轮腿构型与机体高度调节。'],right:['右侧腿部机构','与左侧构成双侧轮腿机构，四路舵机接受策略与逆运动学目标。'],wheels:['双轮驱动总成','两侧驱动轮结合 IMU 与编码器反馈，完成平衡、前进与转向。'],fpga:['上层 · FPGA 与亚克力保护板','ACX750 接口细化板保留双 SFP、网口、HDMI 与排针，上下亚克力板和支柱共同组成上层保护结构。'],rk:['下层 · RK3588 计算盒','带散热片的 G6 计算盒布置在 FPGA 下方，在车端运行视觉、语音和语言理解服务。'],camera:['前上方 · Astra Pro Plus','采用无底座相机本体，镜头朝前；RGB 与深度图像进入 RK3588，提供目标识别与空间位置。']};
     groupCopy.all=['上下分层，双路感知。','上层 FPGA 带亚克力板，下层 RK3588；前上方为无底座 RGB-D 相机，前置 XT-M60 为导航提供几何深度。'];
     groupCopy.radar=['前置 · XT-M60 固态激光雷达','60 线 Flash 雷达经百兆以太网向 FPGA 提供深度帧。点云投影、局部地图与结构匹配连接地形感知、定位和避障。'];
+    Object.assign(dirs,{SG90:[0,.17,-.14],Ultrasonic:[0,.24,-.14],OV5640:[-.12,.09,-.14],Display:[0,.40,.025],accessory_mounts:[0,.06,-.03]});
+    Object.assign(names,{SG90:'SG90 微型舵机',Ultrasonic:'YB-MVU04 超声波模块',OV5640:'OV5640 摄像头',Display:'5 寸电容触摸屏',accessory_mounts:'胶垫、转接片与屏幕垫柱',XT_M60:'XT-M60 固态激光雷达'});
+    Object.assign(descriptions,{SG90:'SG90 粘接在深度相机顶面中央，顶部舵盘承载超声波模块。',Ultrasonic:'YB-MVU04 双探头模块安装在 SG90 上方，两个探头朝向车前方。',OV5640:'30 × 30 mm 摄像头板紧邻深度相机一侧，镜头朝前，胶垫表示粘接位置。',Display:'5 寸 800 × 480 电容触摸屏朝上叠放在 FPGA 亚克力板上，垫柱为背部排针留出空间。',accessory_mounts:'热熔胶粘接区域、超声波转接片和显示屏垫柱的近似外形。'});
+    Object.assign(groups,{sonar:['SG90','Ultrasonic'],ov5640:['OV5640'],display:['Display']});
+    Object.assign(groupCopy,{all:['分层算力，多路感知。','FPGA 与 RK3588 上下分层，顶层叠放触摸屏；前方 RGB-D、侧边 OV5640 和顶部超声波云台组成传感器布置。拖动或拆解查看。'],sonar:['顶部 · SG90 与超声波',descriptions.SG90+' '+descriptions.Ultrasonic],ov5640:['侧边 · OV5640 摄像头',descriptions.OV5640],display:['顶层 · 5 寸电容触摸屏',descriptions.Display]});
     let theta=2.38,phi=1.06,zoom=1,explode=0,auto=false,wire=false,selected='all',dirty=true,drag=null,frame=0,visible=true;
     const pose={theta,phi,zoom:reduceMotion?1:1.08,explode:0};let lastTime=performance.now();
     const baseRadius=Math.max(size.x,size.y,size.z)*2.15;

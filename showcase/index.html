@@ -517,16 +517,19 @@ h1 {
 }
 
 .part-selector {
-  display:flex;
-  flex-wrap:wrap;
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
   gap:7px;
   margin-top:16px
 }
 
 .part-selector button {
-  flex:1 0 52px;
   padding:4px 0;
   font-size:11px
+}
+
+@media(max-width:700px) {
+  .part-selector { grid-template-columns:repeat(3,minmax(0,1fr)) }
 }
 
 .part-caption {

@@ -52,7 +52,7 @@ body:not(.export) .slide{margin:0 auto 24px}
   <div class="glow" style="left:900px;top:80px;width:1060px;height:940px;background:radial-gradient(closest-side,rgba(127,231,225,.20),rgba(127,231,225,.06) 55%,transparent)"></div>
   <div class="glow" style="left:1110px;top:830px;width:700px;height:140px;background:radial-gradient(closest-side,rgba(127,231,225,.22),transparent)"></div>
   <div class="dots" style="left:0;top:0;width:1920px;height:1080px;-webkit-mask-image:radial-gradient(900px 640px at 1400px 520px,#000,transparent)"></div>
-  <img data-ppt="img" src="assets/robot-hero.png" style="left:1010px;top:170px;width:840px">
+  <img data-ppt="img" src="assets/robot-hero.png" style="left:1036px;top:150px;height:800px">
   <div class="t eyebrow" data-ppt="text" style="left:96px;top:170px">FPGA × RK3588 · WHEEL-LEGGED ROBOT</div>
   <div class="t b" data-ppt="text" style="left:90px;top:214px;font-size:170px;line-height:1.15;letter-spacing:6px">云拓</div>
   <div class="t wordmark" data-ppt="text" style="left:98px;top:420px;font-size:64px;font-weight:400"><span class="c" style="color:var(--cyan);font-weight:700">YunTuo</span> Robot</div>
@@ -84,11 +84,11 @@ body:not(.export) .slide{margin:0 auto 24px}
   <div class="t title" data-ppt="text" style="left:96px;top:186px">面向复杂地形巡检与找物的轮腿机器人</div>
   <img data-ppt="img" src="assets/ph-robot-photo.png" style="left:96px;top:316px;width:800px;height:600px">
   <div class="t m" data-ppt="text" style="left:96px;top:934px;font-size:24px">两轮驱动 + 四路腿部舵机 · 车身高度 85–190 mm 可调</div>
-  <div class="t" data-ppt="text" style="left:976px;top:312px;width:848px;font-size:30px;line-height:1.5">两轮自平衡底盘配合四路腿部舵机，完成平衡、移动与车身高度调节；雷达感知地形，相机识别目标。</div>
+  <div class="t" data-ppt="text" style="left:976px;top:312px;width:848px;font-size:30px;line-height:1.5">两轮自平衡底盘与四路腿部舵机实现平衡、移动与高度调节；<br>雷达和超声波感知环境，相机识别目标。</div>
   <div data-ppt="shape" class="hair" style="left:976px;top:440px;width:848px;height:2px"></div>
   <div class="t c b" data-ppt="text" style="left:976px;top:460px;font-size:26px">任务 1</div>
   <div class="t b" data-ppt="text" style="left:1112px;top:456px;font-size:30px;line-height:1.3">多传感器感知</div>
-  <div class="t m" data-ppt="text" style="left:1112px;top:498px;font-size:24px;line-height:1.3">FPGA 采集摄像头与 BMI088，HDMI 实时叠加姿态角</div>
+  <div class="t m" data-ppt="text" style="left:1112px;top:498px;font-size:24px;line-height:1.3">FPGA 采集 OV5640 与 BMI088，车顶触摸屏实时叠加姿态角</div>
   <div data-ppt="shape" class="hair" style="left:976px;top:536px;width:848px;height:2px"></div>
   <div class="t c b" data-ppt="text" style="left:976px;top:556px;font-size:26px">任务 2</div>
   <div class="t b" data-ppt="text" style="left:1112px;top:552px;font-size:30px;line-height:1.3">运动控制</div>
@@ -96,7 +96,7 @@ body:not(.export) .slide{margin:0 auto 24px}
   <div data-ppt="shape" class="hair" style="left:976px;top:632px;width:848px;height:2px"></div>
   <div class="t c b" data-ppt="text" style="left:976px;top:652px;font-size:26px">任务 3</div>
   <div class="t b" data-ppt="text" style="left:1112px;top:648px;font-size:30px;line-height:1.3">实时避障</div>
-  <div class="t m" data-ppt="text" style="left:1112px;top:690px;font-size:24px;line-height:1.3">雷达点云硬件建图，代价图驱动减速、停车与绕行</div>
+  <div class="t m" data-ppt="text" style="left:1112px;top:690px;font-size:24px;line-height:1.3">雷达点云硬件建图，超声波近距补盲，驱动减速、停车与绕行</div>
   <div data-ppt="shape" class="hair" style="left:976px;top:728px;width:848px;height:2px"></div>
   <div class="t c b" data-ppt="text" style="left:976px;top:748px;font-size:26px">任务 4</div>
   <div class="t b" data-ppt="text" style="left:1112px;top:744px;font-size:30px;line-height:1.3">自主导航</div>
@@ -128,25 +128,27 @@ body:not(.export) .slide{margin:0 auto 24px}
   <div class="t m" data-ppt="text" style="left:1014px;top:478px;font-size:24px">导航状态 · 控制遥测</div>
   <div data-ppt="shape" class="box hi" style="left:476px;top:546px;width:860px;height:444px"></div>
   <div class="t c b" data-ppt="text" style="left:506px;top:564px;font-size:30px;line-height:1.3">高云 GW5AT-LV138 FPGA · 单片实时闭环</div>
-  <div data-ppt="shape" class="box flowbox" style="left:506px;top:626px;width:240px;height:340px;justify-content:center;padding:0 16px 0 20px;gap:12px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.3">RTL 流水线</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.6">点云投影<br>高程建图<br>地形代价<br>结构匹配打分<br>图像姿态叠加</div></div>
+  <div data-ppt="shape" class="box flowbox" style="left:506px;top:626px;width:240px;height:340px;justify-content:flex-start;padding:32px 16px 0 20px;gap:12px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.3">RTL 流水线</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.6">点云投影<br>高程建图<br>地形代价<br>结构匹配打分<br>超声回波计时<br>图像姿态叠加</div></div>
   <div data-ppt="line" class="arrow" style="left:746px;top:795px;width:26px"></div>
-  <div data-ppt="shape" class="box flowbox" style="left:786px;top:626px;width:240px;height:340px;justify-content:center;padding:0 16px 0 20px;gap:12px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.3">PicoRV32 软核</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.6">位姿融合<br>A* 全局规划<br>局部轨迹选择<br>探索与跟踪<br>速度安全约束</div></div>
+  <div data-ppt="shape" class="box flowbox" style="left:786px;top:626px;width:240px;height:340px;justify-content:flex-start;padding:32px 16px 0 20px;gap:12px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.3">PicoRV32 软核</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.6">位姿融合<br>A* 全局规划<br>局部轨迹选择<br>探索与跟踪<br>速度安全约束</div></div>
   <div data-ppt="line" class="arrow" style="left:1026px;top:795px;width:26px"></div>
-  <div data-ppt="shape" class="box flowbox" style="left:1066px;top:626px;width:240px;height:340px;justify-content:center;padding:0 16px 0 20px;gap:12px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.3">强化学习控制</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.6">原 4500 策略<br>125 Hz 推理<br>高度逆运动学<br>轮速闭环<br>舵机 · 电机 PWM</div></div>
-  <div data-ppt="shape" class="box flowbox" style="left:96px;top:570px;width:300px;height:84px;gap:2px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.25">XT-M60 固态雷达</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.25">以太网 · 深度点云</div></div>
-  <div data-ppt="line" class="arrow" style="left:396px;top:611px;width:66px"></div>
-  <div data-ppt="shape" class="box flowbox" style="left:96px;top:680px;width:300px;height:84px;gap:2px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.25">摄像头</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.25">FPGA 直接采集</div></div>
-  <div data-ppt="line" class="arrow" style="left:396px;top:721px;width:66px"></div>
-  <div data-ppt="shape" class="box flowbox" style="left:96px;top:790px;width:300px;height:84px;gap:2px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.25">BMI088 IMU</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.25">I²C · 姿态与角速度</div></div>
-  <div data-ppt="line" class="arrow" style="left:396px;top:831px;width:66px"></div>
-  <div data-ppt="shape" class="box flowbox" style="left:96px;top:900px;width:300px;height:84px;gap:2px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.25">AB 编码器</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.25">双轮轮速</div></div>
-  <div data-ppt="line" class="arrow" style="left:396px;top:941px;width:66px"></div>
+  <div data-ppt="shape" class="box flowbox" style="left:1066px;top:626px;width:240px;height:340px;justify-content:flex-start;padding:32px 16px 0 20px;gap:12px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.3">强化学习控制</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.6">原 4500 策略<br>125 Hz 推理<br>高度逆运动学<br>轮速闭环<br>舵机 · 电机 PWM</div></div>
+  <div data-ppt="shape" class="box flowbox" style="left:96px;top:546px;width:300px;height:76px;gap:1px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.2">XT-M60 固态雷达</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.2">以太网 · 深度点云</div></div>
+  <div data-ppt="line" class="arrow" style="left:396px;top:583px;width:66px"></div>
+  <div data-ppt="shape" class="box flowbox" style="left:96px;top:638px;width:300px;height:76px;gap:1px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.2">OV5640 摄像头</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.2">DVP · FPGA 直接采集</div></div>
+  <div data-ppt="line" class="arrow" style="left:396px;top:675px;width:66px"></div>
+  <div data-ppt="shape" class="box flowbox" style="left:96px;top:730px;width:300px;height:76px;gap:1px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.2">超声波云台</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.2">SG90 扫描 · 近距测距</div></div>
+  <div data-ppt="line" class="arrow" style="left:396px;top:767px;width:66px"></div>
+  <div data-ppt="shape" class="box flowbox" style="left:96px;top:822px;width:300px;height:76px;gap:1px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.2">BMI088 IMU</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.2">I²C · 姿态与角速度</div></div>
+  <div data-ppt="line" class="arrow" style="left:396px;top:859px;width:66px"></div>
+  <div data-ppt="shape" class="box flowbox" style="left:96px;top:914px;width:300px;height:76px;gap:1px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.2">AB 编码器</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.2">双轮轮速</div></div>
+  <div data-ppt="line" class="arrow" style="left:396px;top:951px;width:66px"></div>
   <div data-ppt="line" class="arrow" style="left:1336px;top:681px;width:66px"></div>
   <div data-ppt="shape" class="box flowbox" style="left:1416px;top:640px;width:408px;height:84px;gap:2px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.25">双轮电机 ×2</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.25">编码器速度闭环 · PWM</div></div>
   <div data-ppt="line" class="arrow" style="left:1336px;top:791px;width:66px"></div>
   <div data-ppt="shape" class="box flowbox" style="left:1416px;top:750px;width:408px;height:84px;gap:2px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.25">腿部舵机 ×4</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.25">高度逆运动学 · PWM</div></div>
   <div data-ppt="line" class="arrow" style="left:1336px;top:901px;width:66px"></div>
-  <div data-ppt="shape" class="box flowbox" style="left:1416px;top:860px;width:408px;height:84px;gap:2px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.25">HDMI 显示器</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.25">摄像头画面 + 姿态角叠加</div></div>
+  <div data-ppt="shape" class="box flowbox" style="left:1416px;top:860px;width:408px;height:84px;gap:2px"><div class="t b" data-ppt="text" style="font-size:26px;line-height:1.25">5 寸电容触摸屏</div><div class="t m" data-ppt="text" style="font-size:24px;line-height:1.25">RGB 接口 · 画面叠加姿态角</div></div>
   <div class="t foot" data-ppt="text" style="left:96px;top:1014px">云拓 YunTuo · 技术方案介绍</div>
   <div class="t foot num" data-ppt="text" style="right:96px;top:1014px;text-align:right">03 / 08</div>
 </section>
@@ -335,7 +337,7 @@ body:not(.export) .slide{margin:0 auto 24px}
   <div class="t b" data-ppt="text" style="left:200px;top:834px;font-size:34px;line-height:1.3">离线多模态任务</div>
   <div class="t m" data-ppt="text" style="left:200px;top:884px;width:936px;font-size:26px;line-height:1.4">RK3588 本地运行 YOLO26n、Qwen3-1.7B 与 SenseVoice<br>一句话解析为结构化任务，由 FPGA 自主执行</div>
   <div data-ppt="shape" class="hair" style="left:96px;top:980px;width:1040px;height:2px"></div>
-  <img data-ppt="img" src="assets/robot-front.png" style="left:1262px;top:296px;width:500px">
+  <img data-ppt="img" src="assets/robot-front.png" style="left:1290px;top:290px;height:490px">
   <div class="t b" data-ppt="text" style="left:1200px;top:812px;width:624px;font-size:56px;line-height:1.3;text-align:center">让智能落到<span class="c">每一步</span><span class="o">.</span></div>
   <div class="t m" data-ppt="text" style="left:1200px;top:904px;width:624px;font-size:24px;text-align:center">FPGA 实时感知与运动控制 · RK3588 边缘智能</div>
   <div class="t foot" data-ppt="text" style="left:96px;top:1014px">云拓 YunTuo · 技术方案介绍</div>

@@ -1,5 +1,5 @@
 // 渲染透明底整车图：node tools/render_robot.mjs [整车 GLB] [视图名]
-// 默认读取 ../Structure/YunTuo_full_assembly_20261029/YunTuo_full_assembly.glb（相对总仓库所在目录）。
+// 默认读取 ../Structure/YunTuo_full_assembly_20261030/YunTuo_full_assembly.glb（相对总仓库所在目录）。
 // 依赖 playwright-core（D:/tools/pptx_build/node_modules）与本机 Chrome。
 import { createRequire } from 'node:module';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -10,7 +10,7 @@ const require = createRequire(process.env.PPTX_BUILD_NODE || 'D:/tools/pptx_buil
 const { chromium } = require('playwright-core');
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
-const glb = resolve(process.argv[2] || resolve(root, '../../Structure/YunTuo_full_assembly_20261029/YunTuo_full_assembly.glb'));
+const glb = resolve(process.argv[2] || resolve(root, '../../Structure/YunTuo_full_assembly_20261030/YunTuo_full_assembly.glb'));
 const chrome = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 
 const views = [
